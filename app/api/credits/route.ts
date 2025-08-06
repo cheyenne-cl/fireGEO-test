@@ -1,12 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { Autumn } from 'autumn-js';
-import { AuthenticationError, ExternalServiceError, handleApiError } from '@/lib/api-errors';
-import { FEATURE_ID_MESSAGES } from '@/config/constants';
-
-const autumn = new Autumn({
-  apiKey: process.env.AUTUMN_SECRET_KEY!,
-});
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { AuthenticationError, handleApiError } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,18 +10,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!sessionResponse?.user) {
-      throw new AuthenticationError('Please log in to view your credits');
+      throw new AuthenticationError("Please log in to view your credits");
     }
 
-    // Check feature access for messages
-    const access = await autumn.check({
-      customer_id: sessionResponse.user.id,
-      feature_id: FEATURE_ID_MESSAGES,
-    });
-
+    // Hardcode credits to 100 for now
     return NextResponse.json({
-      allowed: access.data?.allowed || false,
-      balance: access.data?.balance || 0,
+      allowed: true,
+      balance: 100,
     });
   } catch (error) {
     return handleApiError(error);
