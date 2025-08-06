@@ -1,23 +1,23 @@
-import { betterAuth } from 'better-auth';
-import { Pool } from 'pg';
-import { sendEmail } from './email';
-import { autumn } from 'autumn-js/better-auth';
+import { betterAuth } from "better-auth";
+import { Pool } from "pg";
+import { sendEmail } from "./email";
+import { autumn } from "autumn-js/better-auth";
 
 export const auth = betterAuth({
   database: new Pool({
     connectionString: process.env.DATABASE_URL!,
   }),
   secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false, // Set to true to require email verification
     sendResetPassword: async ({ user, url }, request) => {
-      console.log('Password reset link:', url);
-      
+      console.log("Password reset link:", url);
+
       await sendEmail({
         to: user.email,
-        subject: 'Reset your password - Fire SaaS',
+        subject: "Reset your password - Fire SaaS",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333;">Reset Your Password</h2>
@@ -36,30 +36,30 @@ export const auth = betterAuth({
               This link will expire in 1 hour.
             </p>
           </div>
-        `
+        `,
       });
     },
   },
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'],
+  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"],
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Update session if older than 1 day
     cookieOptions: {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
     },
   },
   emailVerification: {
     sendOnSignUp: false, // Set to true to send verification email on signup
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }, request) => {
-      console.log('Verification link:', url);
-      
+      console.log("Verification link:", url);
+
       await sendEmail({
         to: user.email,
-        subject: 'Verify your email - Fire SaaS',
+        subject: "Verify your email - Fire SaaS",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333;">Verify Your Email Address</h2>
@@ -75,7 +75,7 @@ export const auth = betterAuth({
               If you didn't create an account, you can safely ignore this email.
             </p>
           </div>
-        `
+        `,
       });
     },
   },

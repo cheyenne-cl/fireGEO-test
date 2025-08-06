@@ -1,15 +1,16 @@
-import { betterAuth } from 'better-auth';
-import { Pool } from 'pg';
-import * as dotenv from 'dotenv';
+import { betterAuth } from "better-auth";
+import { Pool } from "pg";
+import * as dotenv from "dotenv";
 
 // Load environment variables for CLI
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ".env.local" });
 
 const env = {
   DATABASE_URL: process.env.DATABASE_URL!,
   BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET!,
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  NODE_ENV: process.env.NODE_ENV || 'development',
+  NEXT_PUBLIC_APP_URL:
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  NODE_ENV: process.env.NODE_ENV || "development",
 };
 
 export const auth = betterAuth({
@@ -20,6 +21,7 @@ export const auth = betterAuth({
   baseURL: env.NEXT_PUBLIC_APP_URL,
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false,
   },
   trustedOrigins: [env.NEXT_PUBLIC_APP_URL],
   session: {
@@ -27,14 +29,14 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // Update session if older than 1 day
     cookieOptions: {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: env.NODE_ENV === 'production',
-      path: '/',
+      sameSite: "lax",
+      secure: env.NODE_ENV === "production",
+      path: "/",
     },
   },
   advanced: {
     crossSubDomainCookies: {
-      enabled: env.NODE_ENV === 'production',
+      enabled: env.NODE_ENV === "production",
     },
   },
 });

@@ -1,22 +1,22 @@
 /**
  * Centralized AI Provider Configuration
  * This file serves as the single source of truth for all AI provider configurations
- * 
+ *
  * To enable/disable providers:
  * 1. Update PROVIDER_ENABLED_CONFIG below
  * 2. Set to true to enable a provider, false to disable it
  * 3. Even if enabled, providers still require valid API keys to function
- * 
+ *
  * Provider availability is determined by:
  * - enabled: true in PROVIDER_ENABLED_CONFIG
  * - Valid API key in environment variables
  */
 
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
-import { perplexity } from '@ai-sdk/perplexity';
-import { LanguageModelV1 } from 'ai';
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
+import { perplexity } from "@ai-sdk/perplexity";
+import { LanguageModelV1 } from "ai";
 
 export interface ProviderModel {
   id: string;
@@ -54,10 +54,10 @@ export interface ProviderConfig {
  * Even if enabled, the provider must have a valid API key to be used
  */
 export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
-  openai: true,      // OpenAI is enabled
-  anthropic: true,   // Anthropic is enabled
-  google: false,     // Google is disabled
-  perplexity: true,  // Perplexity is enabled
+  openai: true, // OpenAI is enabled
+  anthropic: true, // Anthropic is enabled
+  google: false, // Google is disabled
+  perplexity: true, // Perplexity is enabled
 };
 
 /**
@@ -66,38 +66,38 @@ export const PROVIDER_ENABLED_CONFIG: Record<string, boolean> = {
  */
 export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   openai: {
-    id: 'openai',
-    name: 'OpenAI',
-    icon: '🤖',
-    envKey: 'OPENAI_API_KEY',
+    id: "openai",
+    name: "OpenAI",
+    icon: "🤖",
+    envKey: "OPENAI_API_KEY",
     enabled: PROVIDER_ENABLED_CONFIG.openai,
     models: [
       {
-        id: 'gpt-4o',
-        name: 'GPT-4 Optimized',
+        id: "gpt-4o",
+        name: "GPT-4 Optimized",
         maxTokens: 128000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: false,
       },
       {
-        id: 'gpt-4o-mini',
-        name: 'GPT-4 Mini',
+        id: "gpt-4o-mini",
+        name: "GPT-4 Mini",
         maxTokens: 128000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: true, // Via responses API
       },
       {
-        id: 'gpt-4-turbo',
-        name: 'GPT-4 Turbo',
+        id: "gpt-4-turbo",
+        name: "GPT-4 Turbo",
         maxTokens: 128000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: false,
       },
     ],
-    defaultModel: 'gpt-4o',
+    defaultModel: "gpt-4o",
     capabilities: {
       webSearch: true, // Via responses API with specific models
       functionCalling: true,
@@ -108,50 +108,50 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     getModel: (modelId?: string, options?: any) => {
       if (!process.env.OPENAI_API_KEY) return null;
       const model = modelId || PROVIDER_CONFIGS.openai.defaultModel;
-      
+
       // Use responses API for web search if requested
-      if (options?.useWebSearch && model === 'gpt-4o-mini') {
+      if (options?.useWebSearch && model === "gpt-4o-mini") {
         return openai.responses(model);
       }
-      
+
       return openai(model);
     },
     isConfigured: () => !!process.env.OPENAI_API_KEY,
   },
 
   anthropic: {
-    id: 'anthropic',
-    name: 'Anthropic',
-    icon: '🧠',
-    envKey: 'ANTHROPIC_API_KEY',
+    id: "anthropic",
+    name: "Anthropic",
+    icon: "🧠",
+    envKey: "ANTHROPIC_API_KEY",
     enabled: PROVIDER_ENABLED_CONFIG.anthropic,
     models: [
       {
-        id: 'claude-4-sonnet-20250514',
-        name: 'Claude 4 Sonnet',
+        id: "claude-4-sonnet-20250514",
+        name: "Claude 4 Sonnet",
         maxTokens: 200000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: false,
       },
       {
-        id: 'claude-3-5-sonnet-20241022',
-        name: 'Claude 3.5 Sonnet',
+        id: "claude-3-5-sonnet-20241022",
+        name: "Claude 3.5 Sonnet",
         maxTokens: 200000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: false,
       },
       {
-        id: 'claude-3-opus-20240229',
-        name: 'Claude 3 Opus',
+        id: "claude-3-opus-20240229",
+        name: "Claude 3 Opus",
         maxTokens: 200000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: false,
       },
     ],
-    defaultModel: 'claude-4-sonnet-20250514',
+    defaultModel: "claude-4-sonnet-20250514",
     capabilities: {
       webSearch: false,
       functionCalling: true,
@@ -167,38 +167,38 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
 
   google: {
-    id: 'google',
-    name: 'Google',
-    icon: '🌟',
-    envKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
+    id: "google",
+    name: "Google",
+    icon: "🌟",
+    envKey: "GOOGLE_GENERATIVE_AI_API_KEY",
     enabled: PROVIDER_ENABLED_CONFIG.google,
     models: [
       {
-        id: 'gemini-2.5-pro',
-        name: 'Gemini 2.5 Pro',
+        id: "gemini-2.5-pro",
+        name: "Gemini 2.5 Pro",
         maxTokens: 1000000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: true,
       },
       {
-        id: 'gemini-1.5-pro',
-        name: 'Gemini 1.5 Pro',
+        id: "gemini-1.5-pro",
+        name: "Gemini 1.5 Pro",
         maxTokens: 1000000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: true,
       },
       {
-        id: 'gemini-2.0-flash-exp',
-        name: 'Gemini 2.0 Flash Experimental',
+        id: "gemini-2.0-flash-exp",
+        name: "Gemini 2.0 Flash Experimental",
         maxTokens: 1000000,
         supportsFunctionCalling: true,
         supportsStructuredOutput: true,
         supportsWebSearch: true,
       },
     ],
-    defaultModel: 'gemini-2.5-pro',
+    defaultModel: "gemini-2.5-pro",
     capabilities: {
       webSearch: true, // Native search grounding
       functionCalling: true,
@@ -216,30 +216,30 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
   },
 
   perplexity: {
-    id: 'perplexity',
-    name: 'Perplexity',
-    icon: '🔍',
-    envKey: 'PERPLEXITY_API_KEY',
+    id: "perplexity",
+    name: "Perplexity",
+    icon: "🔍",
+    envKey: "PERPLEXITY_API_KEY",
     enabled: PROVIDER_ENABLED_CONFIG.perplexity,
     models: [
       {
-        id: 'sonar-pro',
-        name: 'Sonar Pro',
+        id: "sonar-pro",
+        name: "Sonar Pro",
         maxTokens: 127000,
         supportsFunctionCalling: false,
         supportsStructuredOutput: false,
         supportsWebSearch: true, // Built-in web search
       },
       {
-        id: 'sonar',
-        name: 'Sonar',
+        id: "sonar",
+        name: "Sonar",
         maxTokens: 127000,
         supportsFunctionCalling: false,
         supportsStructuredOutput: false,
         supportsWebSearch: true,
       },
     ],
-    defaultModel: 'sonar-pro',
+    defaultModel: "sonar-pro",
     capabilities: {
       webSearch: true, // All models have built-in web search
       functionCalling: false,
@@ -259,22 +259,41 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
  * Get all configured providers (must be both enabled and have API key)
  */
 export function getConfiguredProviders(): ProviderConfig[] {
-  return Object.values(PROVIDER_CONFIGS).filter(provider => provider.enabled && provider.isConfigured());
+  const providers = Object.values(PROVIDER_CONFIGS).filter(
+    (provider) => provider.enabled && provider.isConfigured()
+  );
+  console.log(
+    "Available providers:",
+    providers.map((p) => ({ name: p.name, configured: p.isConfigured() }))
+  );
+  console.log("Environment variables:", {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "SET" : "NOT SET",
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? "SET" : "NOT SET",
+    PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY ? "SET" : "NOT SET",
+  });
+  return providers;
 }
 
 /**
  * Get providers that support a specific capability
  */
-export function getProvidersWithCapability(capability: keyof ProviderCapabilities): ProviderConfig[] {
+export function getProvidersWithCapability(
+  capability: keyof ProviderCapabilities
+): ProviderConfig[] {
   return Object.values(PROVIDER_CONFIGS).filter(
-    provider => provider.enabled && provider.isConfigured() && provider.capabilities[capability]
+    (provider) =>
+      provider.enabled &&
+      provider.isConfigured() &&
+      provider.capabilities[capability]
   );
 }
 
 /**
  * Get a specific provider configuration
  */
-export function getProviderConfig(providerId: string): ProviderConfig | undefined {
+export function getProviderConfig(
+  providerId: string
+): ProviderConfig | undefined {
   return PROVIDER_CONFIGS[providerId.toLowerCase()];
 }
 
@@ -304,7 +323,9 @@ export function getProviderModel(
 /**
  * Get provider display info for UI
  */
-export function getProviderDisplayInfo(providerId: string): { name: string; icon: string } | null {
+export function getProviderDisplayInfo(
+  providerId: string
+): { name: string; icon: string } | null {
   const provider = getProviderConfig(providerId);
   if (!provider) return null;
   return {
@@ -317,10 +338,10 @@ export function getProviderDisplayInfo(providerId: string): { name: string; icon
  * Provider name mapping for backward compatibility
  */
 export const PROVIDER_NAME_MAP: Record<string, string> = {
-  'OpenAI': 'openai',
-  'Anthropic': 'anthropic',
-  'Google': 'google',
-  'Perplexity': 'perplexity',
+  OpenAI: "openai",
+  Anthropic: "anthropic",
+  Google: "google",
+  Perplexity: "perplexity",
   // Add more mappings as needed
 };
 
@@ -343,5 +364,5 @@ export function isProviderEnabled(providerId: string): boolean {
  * Get all enabled providers (may or may not have API keys)
  */
 export function getEnabledProviders(): ProviderConfig[] {
-  return Object.values(PROVIDER_CONFIGS).filter(provider => provider.enabled);
+  return Object.values(PROVIDER_CONFIGS).filter((provider) => provider.enabled);
 }
