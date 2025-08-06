@@ -1,20 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { useCustomer } from '@/hooks/useAutumnCustomer';
+import { useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { Send, Menu, X, MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MessageSquare, Send, Plus, Trash2, Menu, X, Loader2 } from 'lucide-react';
 import { useConversations, useConversation, useDeleteConversation } from '@/hooks/useConversations';
 import { useSendMessage } from '@/hooks/useMessages';
 import { format } from 'date-fns';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { useCredits } from '@/hooks/useMessages';
 
-// Separate component that uses Autumn hooks
-function ChatContent({ session }: { session: any }) {
+// Separate component that uses our credits API
+function ChatContent() {
   const router = useRouter();
-  const { allowed, customer, refetch } = useCustomer();
+  const { data: credits } = useCredits();
   const [input, setInput] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -27,11 +28,9 @@ function ChatContent({ session }: { session: any }) {
   const sendMessage = useSendMessage();
   const deleteConversation = useDeleteConversation();
   
-  // Get message usage data
-  const messageUsage = customer?.features?.messages;
-  const remainingMessages = messageUsage ? (messageUsage.balance || 0) : 0;
+  // Get message usage data from our API
+  const remainingMessages = credits?.balance || 0;
   const hasMessages = remainingMessages > 0;
-  const isCustomerLoading = !customer && !session; // Still loading customer data
 
   // Removed auto-scroll functionality
 
@@ -39,13 +38,13 @@ function ChatContent({ session }: { session: any }) {
     if (!input.trim() || sendMessage.isPending) return;
 
     // Check if user has messages available
-    if (!allowed({ featureId: 'messages' })) {
+    if (!hasMessages) {
       return;
     }
 
     try {
       const response = await sendMessage.mutateAsync({
-        conversationId: selectedConversationId,
+        conversationId: selectedConversationId || undefined,
         message: input,
       });
       
@@ -55,10 +54,7 @@ function ChatContent({ session }: { session: any }) {
       if (!selectedConversationId && response.conversationId) {
         setSelectedConversationId(response.conversationId);
       }
-      
-      // Refetch customer data to update credits in navbar
-      await refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to send message:', error);
     }
   };
@@ -116,8 +112,8 @@ function ChatContent({ session }: { session: any }) {
                       <p className="font-medium truncate">
                         {conversation.title || 'Untitled Conversation'}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {conversation.lastMessageAt && format(new Date(conversation.lastMessageAt), 'MMM d, h:mm a')}
+                      <p className="text-xs text-gray-400">
+                        {conversation.lastMessageAt ? format(new Date(conversation.lastMessageAt), 'MMM d, yyyy') : ''}
                       </p>
                     </div>
                     <Button
@@ -165,12 +161,9 @@ function ChatContent({ session }: { session: any }) {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4">
-          {isCustomerLoading ? (
+          {sendMessage.isPending ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading your account data...</p>
-              </div>
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
             </div>
           ) : !hasMessages ? (
             <div className="flex items-center justify-center h-full">
@@ -211,7 +204,7 @@ function ChatContent({ session }: { session: any }) {
                     <p className={`text-xs mt-1 ${
                       message.role === 'user' ? 'text-orange-100' : 'text-gray-500'
                     }`}>
-                      {format(new Date(message.createdAt), 'h:mm a')}
+                      {message.createdAt && format(new Date(message.createdAt), 'h:mm a')}
                     </p>
                   </div>
                 </div>
@@ -250,7 +243,7 @@ function ChatContent({ session }: { session: any }) {
             }}
             className="flex gap-2"
           >
-            <input
+            <Input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -285,24 +278,35 @@ function ChatContent({ session }: { session: any }) {
 
 export default function ChatPage() {
   const { data: session, isPending } = useSession();
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
+  // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push('/login');
-    }
-  }, [session, isPending, router]);
+    setMounted(true);
+  }, []);
 
-  if (isPending || !session) {
+  // Show loading state until mounted
+  if (!mounted) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <Loader2 className="w-12 h-12 text-gray-900 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  return <ChatContent session={session} />;
+  if (isPending || !session) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-gray-900 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <ChatContent />;
 }

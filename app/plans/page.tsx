@@ -1,6 +1,5 @@
 'use client';
 
-import PricingTable from '@/components/autumn/pricing-table';
 import StaticPricingTable from '@/components/static-pricing-table';
 import { useSession } from '@/lib/auth-client';
 
@@ -78,12 +77,8 @@ export default function PricingPage() {
         </div>
 
         <div className="bg-white rounded-[20px] shadow-xl p-8 border border-zinc-200">
-          {/* Use static component for unauthenticated users to avoid API calls */}
-          {session ? (
-            <PricingTable />
-          ) : (
-            <StaticPricingTable products={staticProducts} />
-          )}
+          {/* Always use static component to avoid Autumn API calls */}
+          <StaticPricingTable products={staticProducts} />
         </div>
       </div>
     </div>

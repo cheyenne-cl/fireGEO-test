@@ -1,21 +1,17 @@
 'use client';
 
 import { BrandMonitor } from '@/components/brand-monitor/brand-monitor';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Sparkles, Menu, X, Plus, Trash2, Loader2 } from 'lucide-react';
-import { useCustomer, useRefreshCustomer } from '@/hooks/useAutumnCustomer';
+import { useState, useEffect } from 'react';
+import { Menu, X, Plus, Trash2, Loader2 } from 'lucide-react';
 import { useBrandAnalyses, useBrandAnalysis, useDeleteBrandAnalysis } from '@/hooks/useBrandAnalyses';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { useSession } from '@/lib/auth-client';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { useCredits } from '@/hooks/useMessages';
 
-// Separate component that uses Autumn hooks
-function BrandMonitorContent({ session }: { session: any }) {
-  const router = useRouter();
-  const { customer, isLoading, error } = useCustomer();
-  const refreshCustomer = useRefreshCustomer();
+// Separate component that uses our credits API
+function BrandMonitorContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -26,22 +22,10 @@ function BrandMonitorContent({ session }: { session: any }) {
   const { data: currentAnalysis } = useBrandAnalysis(selectedAnalysisId);
   const deleteAnalysis = useDeleteBrandAnalysis();
   
-  // Get credits from customer data
-  const messageUsage = customer?.features?.messages;
-  const credits = messageUsage ? (messageUsage.balance || 0) : 0;
+  // Get credits from our API
+  const { data: credits } = useCredits();
+  const remainingCredits = credits?.balance || 0;
 
-  useEffect(() => {
-    // If there's an auth error, redirect to login
-    if (error?.code === 'UNAUTHORIZED' || error?.code === 'AUTH_ERROR') {
-      router.push('/login');
-    }
-  }, [error, router]);
-
-  const handleCreditsUpdate = async () => {
-    // Use the global refresh to update customer data everywhere
-    await refreshCustomer();
-  };
-  
   const handleDeleteAnalysis = async (analysisId: string) => {
     setAnalysisToDelete(analysisId);
     setDeleteDialogOpen(true);
@@ -161,10 +145,10 @@ function BrandMonitorContent({ session }: { session: any }) {
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 sm:px-8 lg:px-12 py-8">
             <BrandMonitor 
-              creditsAvailable={credits} 
-              onCreditsUpdate={handleCreditsUpdate}
+              creditsAvailable={remainingCredits} 
+              onCreditsUpdate={() => {}}
               selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
-              onSaveAnalysis={(analysis) => {
+              onSaveAnalysis={() => {
                 // This will be called when analysis completes
                 // We'll implement this in the next step
               }}
@@ -189,6 +173,21 @@ function BrandMonitorContent({ session }: { session: any }) {
 
 export default function BrandMonitorPage() {
   const { data: session, isPending } = useSession();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Show loading state until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
 
   if (isPending) {
     return (
@@ -208,5 +207,5 @@ export default function BrandMonitorPage() {
     );
   }
 
-  return <BrandMonitorContent session={session} />;
+  return <BrandMonitorContent />;
 }

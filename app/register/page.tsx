@@ -55,7 +55,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" suppressHydrationWarning>
       {/* Left side - Orange gradient */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 p-12 items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-orange-400/90 via-orange-500/90 to-orange-600/90" />
@@ -92,7 +92,7 @@ export default function RegisterPage() {
 
       {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-md w-full space-y-8">
+                    <div className="max-w-md w-full space-y-8" suppressHydrationWarning>
           <div>
             <div className="lg:hidden mb-8 flex justify-center">
               <Image
@@ -113,7 +113,7 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
-          <form className="mt-8 space-y-6" onSubmit={handleRegister}>
+          <form className="mt-8 space-y-6" onSubmit={handleRegister} suppressHydrationWarning>
             <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">

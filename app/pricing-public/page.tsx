@@ -39,14 +39,90 @@ export default function PublicPricingPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/autumn/products');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-      const data = await response.json();
-      setProducts(data.products || []);
+      // Use static pricing instead of Autumn API
+      const staticProducts = [
+        {
+          id: 'starter',
+          name: 'Starter',
+          display: {
+            name: 'Starter',
+            description: 'Perfect for side projects',
+            recommend_text: null,
+            button_text: 'Start free'
+          },
+          properties: {
+            is_free: true
+          },
+          items: [
+            {
+              display: {
+                primary_text: 'Free',
+                secondary_text: '/month'
+              }
+            },
+            {
+              display: {
+                primary_text: '100 messages/month',
+                secondary_text: ''
+              }
+            },
+            {
+              display: {
+                primary_text: 'Basic features',
+                secondary_text: ''
+              }
+            },
+            {
+              display: {
+                primary_text: 'Community support',
+                secondary_text: ''
+              }
+            }
+          ]
+        },
+        {
+          id: 'pro',
+          name: 'Pro',
+          display: {
+            name: 'Pro',
+            description: 'For growing businesses',
+            recommend_text: 'Most Popular',
+            button_text: 'Get Pro'
+          },
+          properties: {
+            is_free: false
+          },
+          items: [
+            {
+              display: {
+                primary_text: '$10',
+                secondary_text: '/month'
+              }
+            },
+            {
+              display: {
+                primary_text: 'Unlimited messages',
+                secondary_text: ''
+              }
+            },
+            {
+              display: {
+                primary_text: 'Advanced features',
+                secondary_text: ''
+              }
+            },
+            {
+              display: {
+                primary_text: 'Priority support',
+                secondary_text: ''
+              }
+            }
+          ]
+        }
+      ];
+      setProducts(staticProducts);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error('Error loading static products:', err);
       setError('Failed to load pricing plans');
     } finally {
       setLoading(false);
