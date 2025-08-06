@@ -182,24 +182,29 @@ export function CompanyCard({
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      {/* Favicon */}
-                      <div className="w-10 h-10 flex-shrink-0">
+                      {/* Logo/Favicon */}
+                      <div className="w-12 h-12 flex-shrink-0 relative">
                         {competitor.url ? (
-                          <img 
-                            src={`https://www.google.com/s2/favicons?domain=${competitor.url}&sz=64`}
-                            alt=""
-                            className="w-10 h-10 rounded"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const placeholder = document.createElement('div');
-                              placeholder.className = 'w-10 h-10 bg-gray-100 rounded flex items-center justify-center';
-                              placeholder.innerHTML = '<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>';
-                              e.currentTarget.parentElement!.appendChild(placeholder);
-                            }}
-                          />
+                          <>
+                            <img 
+                              src={`https://www.google.com/s2/favicons?domain=${competitor.url}&sz=64`}
+                              alt={`${competitor.name} logo`}
+                              className="w-12 h-12 rounded-lg object-contain border border-gray-200 bg-white"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const placeholder = e.currentTarget.nextSibling as HTMLDivElement;
+                                if (placeholder) placeholder.style.display = 'flex';
+                              }}
+                            />
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center border border-gray-200" style={{ display: 'none' }}>
+                              <span className="text-lg font-bold text-gray-600">
+                                {competitor.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </>
                         ) : (
-                          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                            <Building2 className="w-5 h-5 text-gray-400" />
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                            <Building2 className="w-6 h-6 text-gray-400" />
                           </div>
                         )}
                       </div>

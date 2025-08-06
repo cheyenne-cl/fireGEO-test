@@ -26,44 +26,24 @@ interface Product {
 export function PublicPricingTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/autumn/products', {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(res => {
-        if (!res.ok) {
-          // If we get a 401, just show static pricing silently
-          return null;
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.products) {
-          setProducts(data.products);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        // Silently fall back to static pricing
-        setLoading(false);
-      });
+    // Simulate loading
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
   }, []);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  // If we can't fetch products (user not logged in), show static pricing
-  if (error || products.length === 0) {
+  // If no products, show static pricing
+  if (products.length === 0) {
     return (
       <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {/* Starter */}
@@ -137,7 +117,7 @@ export function PublicPricingTable() {
             href="/register"
             className="btn-firecrawl-orange w-full inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 h-10 px-4"
           >
-            Start free trial
+            Get started
           </Link>
         </div>
 

@@ -94,6 +94,8 @@ export function ProviderComparisonMatrix({ data, brandName, competitors }: Provi
   const [sortColumn, setSortColumn] = useState<string>('competitor');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>('asc');
   
+
+  
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg">

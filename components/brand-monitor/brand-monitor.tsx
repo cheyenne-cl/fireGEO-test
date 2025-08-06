@@ -31,10 +31,13 @@ import { ResultsNavigation } from './results-navigation';
 import { PromptsResponsesTab } from './prompts-responses-tab';
 import { VisibilityScoreTab } from './visibility-score-tab';
 import { ErrorMessage } from './error-message';
+import { SuccessMessage } from '@/components/ui/success-message';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AddPromptModal } from './modals/add-prompt-modal';
 import { AddCompetitorModal } from './modals/add-competitor-modal';
 import { ProviderComparisonMatrix } from './provider-comparison-matrix';
 import { ProviderRankingsTabs } from './provider-rankings-tabs';
+import { TargetingOptions } from './targeting-options';
 
 // Hooks
 import { useSSEHandler } from './hooks/use-sse-handler';
@@ -56,7 +59,14 @@ export function BrandMonitor({
   const [demoUrl] = useState('example.com');
   const saveAnalysis = useSaveBrandAnalysis();
   const [isLoadingExistingAnalysis, setIsLoadingExistingAnalysis] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const hasSavedRef = useRef(false);
+  const [targetingOptions, setTargetingOptions] = useState<{
+    targetSize?: "startup" | "small" | "medium" | "large" | "enterprise";
+    geographicRegion?: string;
+    marketSegment?: "local" | "regional" | "national" | "global";
+  }>({});
+  const [isTargetingExpanded, setIsTargetingExpanded] = useState(false);
   
   const { startSSEConnection } = useSSEHandler({ 
     state, 
@@ -66,6 +76,11 @@ export function BrandMonitor({
       // Only save if this is a new analysis (not loaded from existing)
       if (!selectedAnalysis && !hasSavedRef.current) {
         hasSavedRef.current = true;
+        
+        if (!completedAnalysis) {
+          console.error('No completed analysis data to save');
+          return;
+        }
         
         const analysisData = {
           url: company?.url || url,
@@ -77,9 +92,12 @@ export function BrandMonitor({
           creditsUsed: CREDITS_PER_BRAND_ANALYSIS
         };
         
+        
+        
         saveAnalysis.mutate(analysisData, {
           onSuccess: (savedAnalysis) => {
             console.log('Analysis saved successfully:', savedAnalysis);
+            setSuccessMessage('Analysis completed and saved successfully!');
             if (onSaveAnalysis) {
               onSaveAnalysis(savedAnalysis);
             }
@@ -260,67 +278,107 @@ export function BrandMonitor({
     
     dispatch({ type: 'SET_PREPARING_ANALYSIS', payload: true });
     
-    // Check which providers are available
+    // Check which providers are available (optional - for full analysis)
     try {
       const response = await fetch('/api/brand-monitor/check-providers', {
         method: 'POST',
       });
       if (response.ok) {
         const data = await response.json();
-        dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: data.providers || ['OpenAI', 'Anthropic', 'Google'] });
+        if (data.providers && data.providers.length > 0) {
+          dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: data.providers });
+        } else {
+          // No providers configured - continue with industry defaults only
+          console.warn('No AI providers configured, will use industry defaults for competitors');
+          dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: [] });
+        }
+      } else {
+        // If provider check fails, continue with industry defaults
+        console.warn('Provider check failed, continuing with industry defaults');
+        dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: [] });
       }
     } catch (e) {
-      // Default to providers with API keys if check fails
-      const defaultProviders = [];
-      if (process.env.NEXT_PUBLIC_HAS_OPENAI_KEY) defaultProviders.push('OpenAI');
-      if (process.env.NEXT_PUBLIC_HAS_ANTHROPIC_KEY) defaultProviders.push('Anthropic');
-      dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: defaultProviders.length > 0 ? defaultProviders : ['OpenAI', 'Anthropic'] });
+      console.error('Error checking providers:', e);
+      // Continue with industry defaults even if provider check fails
+      dispatch({ type: 'SET_AVAILABLE_PROVIDERS', payload: [] });
     }
     
-    // Extract competitors from scraped data or use industry defaults
-    const extractedCompetitors = company.scrapedData?.competitors || [];
-    const industryCompetitors = getIndustryCompetitors(company.industry || '');
-    
-    // Merge extracted competitors with industry defaults, keeping URLs where available
-    const competitorMap = new Map<string, IdentifiedCompetitor>();
-    
-    // Add industry competitors first (they have URLs)
-    industryCompetitors.forEach(comp => {
-      const normalizedName = normalizeCompetitorName(comp.name);
-      competitorMap.set(normalizedName, comp as IdentifiedCompetitor);
-    });
-    
-    // Add extracted competitors and try to match them with known URLs
-    extractedCompetitors.forEach(name => {
-      const normalizedName = normalizeCompetitorName(name);
+    // Use AI to identify real competitors via API call
+    try {
+      console.log('Identifying competitors using AI...');
       
-      // Check if we already have this competitor
-      const existing = competitorMap.get(normalizedName);
-      if (existing) {
-        // If existing has URL but current doesn't, keep existing
-        if (!existing.url) {
-          const url = assignUrlToCompetitor(name);
-          competitorMap.set(normalizedName, { name, url });
-        }
-        return;
+      const response = await fetch('/api/brand-monitor/identify-competitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          company,
+          ...targetingOptions
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to identify competitors');
       }
       
-      // New competitor - try to find a URL for it
-      const url = assignUrlToCompetitor(name);
-      competitorMap.set(normalizedName, { name, url });
-    });
-    
-    let competitors = Array.from(competitorMap.values())
-      .filter(comp => comp.name !== 'Competitor 1' && comp.name !== 'Competitor 2' && 
-                      comp.name !== 'Competitor 3' && comp.name !== 'Competitor 4' && 
-                      comp.name !== 'Competitor 5')
-      .slice(0, 10);
-
-    // Just use the first 6 competitors without AI validation
-    competitors = competitors.slice(0, 6);
-    
-    console.log('Identified competitors:', competitors);
-    dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
+      const { competitors: aiCompetitors } = await response.json();
+      console.log('AI-identified competitors:', aiCompetitors);
+      
+      // Convert AI competitors to IdentifiedCompetitor format with URLs
+      const competitors = aiCompetitors.map(name => {
+        const url = assignUrlToCompetitor(name);
+        console.log(`Assigned URL for "${name}": ${url}`);
+        return { name, url };
+      }).slice(0, 9); // Limit to 9 competitors max
+      
+      console.log('Final competitors with URLs:', competitors);
+      console.log('Competitor names for prompts:', competitors.map(c => c.name));
+      dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
+      
+    } catch (error) {
+      console.error('AI competitor identification failed:', error);
+      
+      // Fallback to industry defaults if AI fails
+      const extractedCompetitors = company.scrapedData?.competitors || [];
+      const industryCompetitors = getIndustryCompetitors(company.industry || '');
+      
+      // Merge extracted competitors with industry defaults, keeping URLs where available
+      const competitorMap = new Map<string, IdentifiedCompetitor>();
+      
+      // Add industry competitors first (they have URLs)
+      industryCompetitors.forEach(comp => {
+        const normalizedName = normalizeCompetitorName(comp.name);
+        competitorMap.set(normalizedName, comp as IdentifiedCompetitor);
+      });
+      
+      // Add extracted competitors and try to match them with known URLs
+      extractedCompetitors.forEach(name => {
+        const normalizedName = normalizeCompetitorName(name);
+        
+        // Check if we already have this competitor
+        const existing = competitorMap.get(normalizedName);
+        if (existing) {
+          // If existing has URL but current doesn't, keep existing
+          if (!existing.url) {
+            const url = assignUrlToCompetitor(name);
+            competitorMap.set(normalizedName, { name, url });
+          }
+          return;
+        }
+        
+        // New competitor - try to find a URL for it
+        const url = assignUrlToCompetitor(name);
+        competitorMap.set(normalizedName, { name, url });
+      });
+      
+      let competitors = Array.from(competitorMap.values())
+        .filter(comp => comp.name !== 'Competitor 1' && comp.name !== 'Competitor 2' && 
+                        comp.name !== 'Competitor 3' && comp.name !== 'Competitor 4' && 
+                        comp.name !== 'Competitor 5')
+        .slice(0, 6);
+      
+      console.log('Fallback competitors:', competitors);
+      dispatch({ type: 'SET_IDENTIFIED_COMPETITORS', payload: competitors });
+    }
     
     // Show competitors on the same page with animation
     dispatch({ type: 'SET_SHOW_COMPETITORS', payload: true });
@@ -360,12 +418,21 @@ export function BrandMonitor({
     // Collect all prompts (default + custom)
     const serviceType = detectServiceType(company);
     const currentYear = new Date().getFullYear();
+    // Create dynamic prompts based on identified competitors
+    const competitorNames = identifiedCompetitors.map(c => c.name);
+    const topCompetitors = competitorNames.slice(0, 4); // Use top 4 competitors
+    const comparisonCompetitors = competitorNames.slice(0, 3); // Use top 3 for comparisons
+    
     const defaultPrompts = [
-      `Best ${serviceType}s in ${currentYear}?`,
-      `Top ${serviceType}s for startups?`,
-      `Most popular ${serviceType}s today?`,
-      `Recommended ${serviceType}s for developers?`
+      `Compare ${topCompetitors.join(', ')} for ${serviceType} capabilities`,
+      `Rank ${topCompetitors.join(', ')} by their ${serviceType} features`,
+      `Which is better for ${serviceType}: ${comparisonCompetitors.join(' vs ')}?`,
+      `${serviceType} comparison: ${topCompetitors.join(' vs ')}`
     ].filter((_, index) => !removedDefaultPrompts.includes(index));
+    
+    console.log('Generated prompts:', defaultPrompts);
+    console.log('Top competitors used:', topCompetitors);
+    console.log('Comparison competitors used:', comparisonCompetitors);
     
     const allPrompts = [...defaultPrompts, ...customPrompts];
     
@@ -386,30 +453,60 @@ export function BrandMonitor({
     }});
     dispatch({ type: 'SET_ANALYSIS_TILES', payload: [] });
     
-    // Initialize prompt completion status
-    const initialStatus: any = {};
-    const expectedProviders = getEnabledProviders().map(config => config.name);
-    
-    normalizedPrompts.forEach(prompt => {
-      initialStatus[prompt] = {};
-      expectedProviders.forEach(provider => {
-        initialStatus[prompt][provider] = 'pending';
-      });
-    });
-    dispatch({ type: 'SET_PROMPT_COMPLETION_STATUS', payload: initialStatus });
-
+    // Check providers server-side before starting analysis
     try {
-      await startSSEConnection('/api/brand-monitor/analyze', {
+      const providerResponse = await fetch('/api/brand-monitor/check-providers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          company, 
-          prompts: normalizedPrompts,
-          competitors: identifiedCompetitors 
-        }),
+        body: JSON.stringify({})
       });
-    } finally {
+      
+      if (!providerResponse.ok) {
+        throw new Error('Failed to check providers');
+      }
+      
+      const providerData = await providerResponse.json();
+      const availableProviders = providerData.providers || [];
+      
+      if (availableProviders.length === 0) {
+        console.warn('No AI providers configured for analysis');
+        dispatch({ type: 'SET_ERROR', payload: 'No AI providers configured. Please set up at least one API key (OpenAI, Anthropic, or Perplexity) to run a full analysis.' });
+        dispatch({ type: 'SET_ANALYZING', payload: false });
+        return;
+      }
+      
+      console.log('Starting analysis with providers:', availableProviders.map(p => p.name));
+      
+      // Initialize prompt completion status
+      const initialStatus: any = {};
+      const expectedProviders = availableProviders.map(p => p.name);
+    
+      normalizedPrompts.forEach(prompt => {
+        initialStatus[prompt] = {};
+        expectedProviders.forEach(provider => {
+          initialStatus[prompt][provider] = 'pending';
+        });
+      });
+      dispatch({ type: 'SET_PROMPT_COMPLETION_STATUS', payload: initialStatus });
+
+      try {
+        await startSSEConnection('/api/brand-monitor/run-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            company, 
+            prompts: normalizedPrompts,
+            competitors: identifiedCompetitors 
+          }),
+        });
+      } finally {
+        dispatch({ type: 'SET_ANALYZING', payload: false });
+      }
+    } catch (error) {
+      console.error('Error checking providers:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Unable to check AI providers. Please ensure you have at least one API key configured.' });
       dispatch({ type: 'SET_ANALYZING', payload: false });
+      return;
     }
   }, [company, removedDefaultPrompts, customPrompts, identifiedCompetitors, startSSEConnection, creditsAvailable]);
   
@@ -450,6 +547,13 @@ export function BrandMonitor({
             analyzing={analyzing}
             onUrlChange={handleUrlChange}
             onSubmit={handleScrape}
+          />
+          
+          {/* Targeting Options */}
+          <TargetingOptions
+            onOptionsChange={setTargetingOptions}
+            isExpanded={isTargetingExpanded}
+            onToggleExpanded={() => setIsTargetingExpanded(!isTargetingExpanded)}
           />
           </div>
         </div>
@@ -619,6 +723,19 @@ export function BrandMonitor({
         <ErrorMessage
           error={error}
           onDismiss={() => dispatch({ type: 'SET_ERROR', payload: null })}
+          onRetry={() => {
+            dispatch({ type: 'SET_ERROR', payload: null });
+            if (url) {
+              handleScrape();
+            }
+          }}
+        />
+      )}
+      
+      {successMessage && (
+        <SuccessMessage
+          message={successMessage}
+          onDismiss={() => setSuccessMessage(null)}
         />
       )}
       

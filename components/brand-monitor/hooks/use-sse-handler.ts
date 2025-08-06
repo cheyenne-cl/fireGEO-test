@@ -1,13 +1,16 @@
-import { useRef, useEffect } from 'react';
-import { BrandMonitorState, BrandMonitorAction } from '@/lib/brand-monitor-reducer';
-import { SSEParser } from '@/lib/sse-parser';
-import { 
-  ProgressData, 
-  CompetitorFoundData, 
-  PromptGeneratedData, 
-  AnalysisProgressData, 
-  PartialResultData 
-} from '@/lib/types';
+import { useRef, useEffect } from "react";
+import {
+  BrandMonitorState,
+  BrandMonitorAction,
+} from "@/lib/brand-monitor-reducer";
+import { SSEParser } from "@/lib/sse-parser";
+import {
+  ProgressData,
+  CompetitorFoundData,
+  PromptGeneratedData,
+  AnalysisProgressData,
+  PartialResultData,
+} from "@/lib/types";
 
 interface UseSSEHandlerProps {
   state: BrandMonitorState;
@@ -16,213 +19,238 @@ interface UseSSEHandlerProps {
   onAnalysisComplete?: (analysis: any) => void;
 }
 
-export function useSSEHandler({ state, dispatch, onCreditsUpdate, onAnalysisComplete }: UseSSEHandlerProps) {
+export function useSSEHandler({
+  state,
+  dispatch,
+  onCreditsUpdate,
+  onAnalysisComplete,
+}: UseSSEHandlerProps) {
   // Use ref to track current prompt status to avoid closure issues in SSE handler
   const promptCompletionStatusRef = useRef(state.promptCompletionStatus);
   const analyzingPromptsRef = useRef(state.analyzingPrompts);
-  
+
   useEffect(() => {
     promptCompletionStatusRef.current = state.promptCompletionStatus;
   }, [state.promptCompletionStatus]);
-  
+
   useEffect(() => {
     analyzingPromptsRef.current = state.analyzingPrompts;
   }, [state.analyzingPrompts]);
 
   const handleSSEEvent = (eventData: any) => {
-    console.log('[SSE] Received event:', eventData.type, eventData.data);
-    
+    console.log("[SSE] Received event:", eventData.type, eventData.data);
+
     switch (eventData.type) {
-      case 'credits':
+      case "credits":
         // Handle credit update event
         if (onCreditsUpdate) {
           onCreditsUpdate();
         }
         break;
-        
-      case 'progress':
+
+      case "progress":
         const progressData = eventData.data as ProgressData;
         dispatch({
-          type: 'UPDATE_ANALYSIS_PROGRESS',
+          type: "UPDATE_ANALYSIS_PROGRESS",
           payload: {
             stage: progressData.stage,
             progress: progressData.progress,
-            message: progressData.message
-          }
+            message: progressData.message,
+          },
         });
         break;
 
-      case 'competitor-found':
+      case "competitor-found":
         const competitorData = eventData.data as CompetitorFoundData;
         dispatch({
-          type: 'UPDATE_ANALYSIS_PROGRESS',
+          type: "UPDATE_ANALYSIS_PROGRESS",
           payload: {
-            competitors: [...(state.analysisProgress.competitors || []), competitorData.competitor]
-          }
+            competitors: [
+              ...(state.analysisProgress.competitors || []),
+              competitorData.competitor,
+            ],
+          },
         });
         break;
 
-      case 'prompt-generated':
+      case "prompt-generated":
         const promptData = eventData.data as PromptGeneratedData;
         const existingPrompts = analyzingPromptsRef.current || [];
         const analysisPrompts = state.analysisProgress.prompts || [];
-        
+
         // If prompts are already set (from custom prompts), don't process prompt-generated events
         // This prevents overwriting the initial prompts set in handleAnalyze
         if (existingPrompts.length > 0) {
-          
           // Still update analysis progress prompts to keep them in sync
           if (!analysisPrompts.includes(promptData.prompt)) {
             dispatch({
-              type: 'UPDATE_ANALYSIS_PROGRESS',
+              type: "UPDATE_ANALYSIS_PROGRESS",
               payload: {
-                prompts: [...analysisPrompts, promptData.prompt]
-              }
+                prompts: [...analysisPrompts, promptData.prompt],
+              },
             });
           }
           break;
         }
-        
+
         // Only process if this is truly a new prompt being generated
         if (!existingPrompts.includes(promptData.prompt)) {
           dispatch({
-            type: 'UPDATE_ANALYSIS_PROGRESS',
+            type: "UPDATE_ANALYSIS_PROGRESS",
             payload: {
-              prompts: [...analysisPrompts, promptData.prompt]
-            }
+              prompts: [...analysisPrompts, promptData.prompt],
+            },
           });
           dispatch({
-            type: 'SET_ANALYZING_PROMPTS',
-            payload: [...existingPrompts, promptData.prompt]
+            type: "SET_ANALYZING_PROMPTS",
+            payload: [...existingPrompts, promptData.prompt],
           });
-          
+
           // Initialize prompt completion status
           const newStatus = { ...promptCompletionStatusRef.current };
           const normalizedPrompt = promptData.prompt.trim();
           newStatus[normalizedPrompt] = {};
-          state.availableProviders.forEach(provider => {
-            newStatus[normalizedPrompt][provider] = 'pending';
+          state.availableProviders.forEach((provider) => {
+            newStatus[normalizedPrompt][provider] = "pending";
           });
           dispatch({
-            type: 'SET_PROMPT_COMPLETION_STATUS',
-            payload: newStatus
+            type: "SET_PROMPT_COMPLETION_STATUS",
+            payload: newStatus,
           });
         }
         break;
 
-      case 'analysis-start':
+      case "analysis-start":
         const analysisStartData = eventData.data as AnalysisProgressData;
         const normalizedStartPrompt = analysisStartData.prompt.trim();
-        
+
         dispatch({
-          type: 'UPDATE_ANALYSIS_PROGRESS',
+          type: "UPDATE_ANALYSIS_PROGRESS",
           payload: {
             currentProvider: analysisStartData.provider,
             currentPrompt: normalizedStartPrompt,
-          }
+          },
         });
-        
+
         dispatch({
-          type: 'UPDATE_PROMPT_STATUS',
+          type: "UPDATE_PROMPT_STATUS",
           payload: {
             prompt: normalizedStartPrompt,
             provider: analysisStartData.provider,
-            status: 'running'
-          }
+            status: "running",
+          },
         });
-        
+
         // Update tile status to running
-        const tileIndex = state.analysisTiles.findIndex(tile => tile.prompt === analysisStartData.prompt);
+        const tileIndex = state.analysisTiles.findIndex(
+          (tile) => tile.prompt === analysisStartData.prompt
+        );
         if (tileIndex !== -1) {
           const updatedTile = { ...state.analysisTiles[tileIndex] };
-          const providerIndex = updatedTile.providers.findIndex(p => p.name === analysisStartData.provider);
+          const providerIndex = updatedTile.providers.findIndex(
+            (p) => p.name === analysisStartData.provider
+          );
           if (providerIndex !== -1) {
-            updatedTile.providers[providerIndex].status = 'running';
+            updatedTile.providers[providerIndex].status = "running";
             dispatch({
-              type: 'UPDATE_ANALYSIS_TILE',
-              payload: { index: tileIndex, tile: updatedTile }
+              type: "UPDATE_ANALYSIS_TILE",
+              payload: { index: tileIndex, tile: updatedTile },
             });
           }
         }
         break;
 
-      case 'partial-result':
+      case "partial-result":
         const partialData = eventData.data as PartialResultData;
         const normalizedPartialPrompt = partialData.prompt.trim();
-        
+
         dispatch({
-          type: 'UPDATE_ANALYSIS_PROGRESS',
+          type: "UPDATE_ANALYSIS_PROGRESS",
           payload: {
-            partialResults: [...(state.analysisProgress.partialResults || []), partialData],
-          }
+            partialResults: [
+              ...(state.analysisProgress.partialResults || []),
+              partialData,
+            ],
+          },
         });
-        
+
         dispatch({
-          type: 'UPDATE_PROMPT_STATUS',
+          type: "UPDATE_PROMPT_STATUS",
           payload: {
             prompt: normalizedPartialPrompt,
             provider: partialData.provider,
-            status: 'completed'
-          }
+            status: "completed",
+          },
         });
-        
+
         // Update tile with result
-        const partialTileIndex = state.analysisTiles.findIndex(tile => tile.prompt === partialData.prompt);
+        const partialTileIndex = state.analysisTiles.findIndex(
+          (tile) => tile.prompt === partialData.prompt
+        );
         if (partialTileIndex !== -1) {
           const updatedTile = { ...state.analysisTiles[partialTileIndex] };
-          const providerIndex = updatedTile.providers.findIndex(p => p.name === partialData.provider);
+          const providerIndex = updatedTile.providers.findIndex(
+            (p) => p.name === partialData.provider
+          );
           if (providerIndex !== -1) {
             updatedTile.providers[providerIndex] = {
               ...updatedTile.providers[providerIndex],
-              status: 'completed',
+              status: "completed",
               result: {
                 brandMentioned: partialData.response.brandMentioned || false,
                 brandPosition: partialData.response.brandPosition,
-                sentiment: partialData.response.sentiment || 'neutral'
-              }
+                sentiment: partialData.response.sentiment || "neutral",
+              },
             };
             dispatch({
-              type: 'UPDATE_ANALYSIS_TILE',
-              payload: { index: partialTileIndex, tile: updatedTile }
+              type: "UPDATE_ANALYSIS_TILE",
+              payload: { index: partialTileIndex, tile: updatedTile },
             });
           }
         }
         break;
 
-      case 'analysis-complete':
+      case "analysis-complete":
         const analysisCompleteData = eventData.data as AnalysisProgressData;
-        
+
         if (!analysisCompleteData.prompt || !analysisCompleteData.provider) {
-          console.error('[ERROR] Missing prompt or provider in analysis-complete event');
+          console.error(
+            "[ERROR] Missing prompt or provider in analysis-complete event"
+          );
           break;
         }
-        
+
         const normalizedCompletePrompt = analysisCompleteData.prompt.trim();
-        
-        if (analysisCompleteData.status === 'failed') {
+
+        if (analysisCompleteData.status === "failed") {
           dispatch({
-            type: 'UPDATE_PROMPT_STATUS',
+            type: "UPDATE_PROMPT_STATUS",
             payload: {
               prompt: normalizedCompletePrompt,
               provider: analysisCompleteData.provider,
-              status: 'failed'
-            }
+              status: "failed",
+            },
           });
-          
+
           // Update tile status to failed
-          const failedTileIndex = state.analysisTiles.findIndex(tile => tile.prompt === analysisCompleteData.prompt);
+          const failedTileIndex = state.analysisTiles.findIndex(
+            (tile) => tile.prompt === analysisCompleteData.prompt
+          );
           if (failedTileIndex !== -1) {
             const updatedTile = { ...state.analysisTiles[failedTileIndex] };
-            const providerIndex = updatedTile.providers.findIndex(p => p.name === analysisCompleteData.provider);
+            const providerIndex = updatedTile.providers.findIndex(
+              (p) => p.name === analysisCompleteData.provider
+            );
             if (providerIndex !== -1) {
-              updatedTile.providers[providerIndex].status = 'failed';
+              updatedTile.providers[providerIndex].status = "failed";
               dispatch({
-                type: 'UPDATE_ANALYSIS_TILE',
-                payload: { index: failedTileIndex, tile: updatedTile }
+                type: "UPDATE_ANALYSIS_TILE",
+                payload: { index: failedTileIndex, tile: updatedTile },
               });
             }
           }
-        } /* else if ('status' in analysisCompleteData && analysisCompleteData.status === 'skipped') {
+        }
+        /* else if ('status' in analysisCompleteData && analysisCompleteData.status === 'skipped') {
           dispatch({
             type: 'UPDATE_PROMPT_STATUS',
             payload: {
@@ -233,21 +261,21 @@ export function useSSEHandler({ state, dispatch, onCreditsUpdate, onAnalysisComp
           });
         } else */ {
           dispatch({
-            type: 'UPDATE_PROMPT_STATUS',
+            type: "UPDATE_PROMPT_STATUS",
             payload: {
               prompt: normalizedCompletePrompt,
               provider: analysisCompleteData.provider,
-              status: 'completed'
-            }
+              status: "completed",
+            },
           });
         }
         break;
 
-      case 'complete':
-        const completeData = eventData.data as { analysis: any };
+      case "complete":
+        const completeData = eventData.data;
         dispatch({
-          type: 'ANALYSIS_COMPLETE',
-          payload: completeData.analysis
+          type: "ANALYSIS_COMPLETE",
+          payload: completeData,
         });
         // Update credits after analysis is complete
         if (onCreditsUpdate) {
@@ -255,17 +283,17 @@ export function useSSEHandler({ state, dispatch, onCreditsUpdate, onAnalysisComp
         }
         // Call the completion callback
         if (onAnalysisComplete) {
-          onAnalysisComplete(completeData.analysis);
+          onAnalysisComplete(completeData);
         }
         break;
 
-      case 'error':
+      case "error":
         const errorData = eventData.data as { message?: string };
         dispatch({
-          type: 'SET_ERROR',
-          payload: errorData.message || 'Analysis failed'
+          type: "SET_ERROR",
+          payload: errorData.message || "Analysis failed",
         });
-        console.error('Analysis error:', eventData.data);
+        console.error("Analysis error:", eventData.data);
         break;
     }
   };
@@ -273,15 +301,15 @@ export function useSSEHandler({ state, dispatch, onCreditsUpdate, onAnalysisComp
   const startSSEConnection = async (url: string, options?: RequestInit) => {
     try {
       const response = await fetch(url, options);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze');
+        throw new Error(errorData.error || "Failed to analyze");
       }
 
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error('No response body');
+        throw new Error("No response body");
       }
 
       const parser = new SSEParser();
@@ -300,37 +328,38 @@ export function useSSEHandler({ state, dispatch, onCreditsUpdate, onAnalysisComp
               const eventData = JSON.parse(event.data);
               handleSSEEvent(eventData);
             } catch (e) {
-              console.error('Failed to parse SSE event:', e);
+              console.error("Failed to parse SSE event:", e);
             }
           }
         }
       }
     } catch (error) {
       // Check if it's a connection error
-      if (error instanceof TypeError && error.message.includes('network')) {
+      if (error instanceof TypeError && error.message.includes("network")) {
         dispatch({
-          type: 'SET_ERROR',
-          payload: 'Connection lost. Please check your internet connection and try again.'
+          type: "SET_ERROR",
+          payload:
+            "Connection lost. Please check your internet connection and try again.",
         });
       } else {
         dispatch({
-          type: 'SET_ERROR',
-          payload: 'Failed to analyze brand visibility'
+          type: "SET_ERROR",
+          payload: "Failed to analyze brand visibility",
         });
       }
       console.error(error);
-      
+
       // Reset progress
       dispatch({
-        type: 'SET_ANALYSIS_PROGRESS',
+        type: "SET_ANALYSIS_PROGRESS",
         payload: {
-          stage: 'initializing',
+          stage: "initializing",
           progress: 0,
-          message: '',
+          message: "",
           competitors: [],
           prompts: [],
-          partialResults: []
-        }
+          partialResults: [],
+        },
       });
     }
   };

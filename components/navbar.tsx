@@ -4,18 +4,24 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useCustomer } from '@/hooks/useAutumnCustomer';
+import { useState, useEffect } from 'react';
+import { useCredits } from '@/hooks/useMessages';
 
-// Separate component that only renders when Autumn is available
 function UserCredits() {
-  const { customer } = useCustomer();
-  const messageUsage = customer?.features?.messages;
-  const remainingMessages = messageUsage ? (messageUsage.balance || 0) : 0;
+  const { data: credits, isLoading } = useCredits();
+  const remainingCredits = credits?.balance || 0;
   
+  if (isLoading) {
+    return (
+      <div className="flex items-center text-sm font-medium text-gray-700">
+        <span>Loading...</span>
+      </div>
+    );
+  }
+    
   return (
     <div className="flex items-center text-sm font-medium text-gray-700">
-      <span>{remainingMessages}</span>
+      <span>{remainingCredits}</span>
       <span className="ml-1">credits</span>
     </div>
   );
@@ -24,7 +30,13 @@ function UserCredits() {
 export function Navbar() {
   const { data: session, isPending } = useSession();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -53,12 +65,22 @@ export function Navbar() {
                 width={120}
                 height={25}
                 priority
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
-            {session && (
+            {/* Always show Plans link */}
+            <Link
+              href="/plans"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+            >
+              Plans
+            </Link>
+            
+            {/* Show session-dependent content only after mount */}
+            {mounted && session && (
               <>
                 <Link
                   href="/chat"
@@ -72,20 +94,13 @@ export function Navbar() {
                 >
                   Brand Monitor
                 </Link>
+                <UserCredits />
               </>
             )}
-            <Link
-              href="/plans"
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              Plans
-            </Link>
-            {session && (
-              <UserCredits />
-            )}
-            {isPending ? (
+            
+            {mounted && isPending ? (
               <div className="text-sm text-gray-400">Loading...</div>
-            ) : session ? (
+            ) : mounted && session ? (
               <>
                 <Link
                   href="/dashboard"
@@ -101,7 +116,7 @@ export function Navbar() {
                   {isLoggingOut ? 'Logging out...' : 'Logout'}
                 </button>
               </>
-            ) : (
+            ) : mounted ? (
               <>
                 <Link 
                   href="/login"
@@ -116,7 +131,7 @@ export function Navbar() {
                   Register
                 </Link>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
