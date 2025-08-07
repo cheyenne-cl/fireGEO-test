@@ -1,211 +1,88 @@
 'use client';
 
-import { BrandMonitor } from '@/components/brand-monitor/brand-monitor';
-import { useState, useEffect } from 'react';
-import { Menu, X, Plus, Trash2, Loader2 } from 'lucide-react';
-import { useBrandAnalyses, useBrandAnalysis, useDeleteBrandAnalysis } from '@/hooks/useBrandAnalyses';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { useSession } from '@/lib/auth-client';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { useCredits } from '@/hooks/useMessages';
+import { useState } from 'react';
+import Link from 'next/link';
 
-// Separate component that uses our credits API
-function BrandMonitorContent() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [analysisToDelete, setAnalysisToDelete] = useState<string | null>(null);
-  
-  // Queries and mutations
-  const { data: analyses, isLoading: analysesLoading } = useBrandAnalyses();
-  const { data: currentAnalysis } = useBrandAnalysis(selectedAnalysisId);
-  const deleteAnalysis = useDeleteBrandAnalysis();
-  
-  // Get credits from our API
-  const { data: credits } = useCredits();
-  const remainingCredits = credits?.balance || 0;
+export default function BrandMonitorDemo() {
+  const [url, setUrl] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleDeleteAnalysis = async (analysisId: string) => {
-    setAnalysisToDelete(analysisId);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (analysisToDelete) {
-      await deleteAnalysis.mutateAsync(analysisToDelete);
-      if (selectedAnalysisId === analysisToDelete) {
-        setSelectedAnalysisId(null);
-      }
-      setAnalysisToDelete(null);
-    }
-  };
-  
-  const handleNewAnalysis = () => {
-    setSelectedAnalysisId(null);
+  const handleAnalyze = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAnalyzing(true);
+    
+    // Simulate analysis
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      alert('This is a demo version. The full app with API functionality is available when deployed with a server (like Vercel).');
+    }, 2000);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-white border-b">
-        <div className="px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-2 animate-fade-in-up">
-                  <span className="block text-zinc-900">FireGEO Monitor</span>
-                  <span className="block bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-transparent">
-                    AI Brand Visibility Platform
-                  </span>
-                </h1>
-                <p className="text-lg text-zinc-600 animate-fade-in-up animation-delay-200">
-                  Track how AI models rank your brand against competitors
-                </p>
-              </div>
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Brand Monitor Demo
+            </h1>
+            <p className="text-lg text-gray-600">
+              This is a static demo version. The full functionality requires server deployment.
+            </p>
           </div>
-        </div>
-      </div>
 
-      <div className="flex h-[calc(100vh-12rem)] relative">
-        {/* Sidebar Toggle Button - Always visible */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`absolute top-2 z-10 p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${
-            sidebarOpen ? 'left-[324px]' : 'left-4'
-          }`}
-          aria-label="Toggle sidebar"
-        >
-          {sidebarOpen ? (
-            <X className="h-5 w-5 text-gray-600" />
-          ) : (
-            <Menu className="h-5 w-5 text-gray-600" />
-          )}
-        </button>
+          <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+            <h2 className="text-2xl font-semibold mb-6">Analyze Your Brand</h2>
+            
+            <form onSubmit={handleAnalyze} className="space-y-6">
+              <div>
+                <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+                  Website URL
+                </label>
+                <input
+                  type="url"
+                  id="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
 
-        {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'w-80' : 'w-0'} bg-white border-r overflow-hidden flex flex-col transition-all duration-200`}>
-          <div className="p-4 border-b">
-            <Button
-              onClick={handleNewAnalysis}
-              className="w-full btn-firecrawl-orange"
+              <button
+                type="submit"
+                disabled={isAnalyzing}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+              >
+                {isAnalyzing ? 'Analyzing...' : 'Start Analysis'}
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">
+              Demo Features
+            </h3>
+            <ul className="space-y-2 text-blue-800">
+              <li>• Web scraping and content extraction</li>
+              <li>• AI-powered competitor identification</li>
+              <li>• Multi-provider analysis (OpenAI, Anthropic, Perplexity)</li>
+              <li>• Real-time progress updates</li>
+              <li>• Comprehensive brand visibility reports</li>
+            </ul>
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/"
+              className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Analysis
-            </Button>
-          </div>
-          
-          <div className="overflow-y-auto flex-1">
-            {analysesLoading ? (
-              <div className="p-4 text-center text-gray-500">Loading analyses...</div>
-            ) : analyses?.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">No analyses yet</div>
-            ) : (
-              <div className="space-y-1 p-2">
-                {analyses?.map((analysis) => (
-                  <div
-                    key={analysis.id}
-                    className={`p-3 rounded-lg cursor-pointer hover:bg-gray-100 ${
-                      selectedAnalysisId === analysis.id ? 'bg-gray-100' : ''
-                    }`}
-                    onClick={() => setSelectedAnalysisId(analysis.id)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">
-                          {analysis.companyName || 'Untitled Analysis'}
-                        </p>
-                        <p className="text-sm text-gray-500 truncate">
-                          {analysis.url}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {analysis.createdAt && format(new Date(analysis.createdAt), 'MMM d, yyyy')}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAnalysis(analysis.id);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 sm:px-8 lg:px-12 py-8">
-            <BrandMonitor 
-              creditsAvailable={remainingCredits} 
-              onCreditsUpdate={() => {}}
-              selectedAnalysis={selectedAnalysisId ? currentAnalysis : null}
-              onSaveAnalysis={() => {
-                // This will be called when analysis completes
-                // We'll implement this in the next step
-              }}
-            />
+              ← Back to Home
+            </Link>
           </div>
         </div>
       </div>
-      
-      <ConfirmationDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        title="Delete Analysis"
-        description="Are you sure you want to delete this analysis? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={confirmDelete}
-        isLoading={deleteAnalysis.isPending}
-      />
     </div>
   );
-}
-
-export default function BrandMonitorPage() {
-  const { data: session, isPending } = useSession();
-  const [mounted, setMounted] = useState(false);
-
-  // Prevent hydration mismatch by only rendering after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Show loading state until mounted
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-      </div>
-    );
-  }
-
-  if (isPending) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Please log in to access the brand monitor</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <BrandMonitorContent />;
 }
