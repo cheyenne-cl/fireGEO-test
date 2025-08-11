@@ -300,11 +300,28 @@ export function useSSEHandler({
 
   const startSSEConnection = async (url: string, options?: RequestInit) => {
     try {
-      const response = await fetch(url, options);
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include', // Include cookies for authentication
+      });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to analyze");
+        let errorMessage = "Failed to analyze";
+        try {
+          const errorData = await response.json();
+          errorMessage =
+            errorData.error?.message || errorData.error || errorMessage;
+        } catch (parseError) {
+          // If we can't parse the error as JSON, try to get the text
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            // If we can't get the text either, use a generic message
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();
@@ -342,12 +359,16 @@ export function useSSEHandler({
             "Connection lost. Please check your internet connection and try again.",
         });
       } else {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to analyze brand visibility";
         dispatch({
           type: "SET_ERROR",
-          payload: "Failed to analyze brand visibility",
+          payload: errorMessage,
         });
       }
-      console.error(error);
+      console.error("SSE Connection error:", error);
 
       // Reset progress
       dispatch({
