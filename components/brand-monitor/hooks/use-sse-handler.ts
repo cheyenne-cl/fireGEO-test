@@ -273,9 +273,11 @@ export function useSSEHandler({
 
       case "complete":
         const completeData = eventData.data;
+        const analysisData = completeData.analysis; // Extract the actual analysis data
+
         dispatch({
           type: "ANALYSIS_COMPLETE",
-          payload: completeData,
+          payload: analysisData,
         });
         // Update credits after analysis is complete
         if (onCreditsUpdate) {
@@ -283,7 +285,7 @@ export function useSSEHandler({
         }
         // Call the completion callback
         if (onAnalysisComplete) {
-          onAnalysisComplete(completeData);
+          onAnalysisComplete(analysisData);
         }
         break;
 
@@ -302,7 +304,7 @@ export function useSSEHandler({
     try {
       const response = await fetch(url, {
         ...options,
-        credentials: 'include', // Include cookies for authentication
+        credentials: "include", // Include cookies for authentication
       });
 
       if (!response.ok) {
