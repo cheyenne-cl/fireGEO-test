@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { Pool } from "pg";
 import { performAnalysis } from "@/lib/analyze-common";
 import {
   handleApiError,
@@ -12,18 +12,40 @@ export async function POST(request: NextRequest) {
   console.log("[DEBUG] run-analysis route called");
 
   try {
-    // Get the session using Better Auth
-    const sessionResponse = await auth.api.getSession({
-      headers: request.headers,
-    });
+    // Check session using simple auth
+    const sessionToken = request.cookies.get("session-token")?.value;
+    console.log("[DEBUG] Session token present:", !!sessionToken);
 
-    if (!sessionResponse?.user) {
-      console.log("[DEBUG] No valid session found");
+    if (!sessionToken) {
+      console.log("[DEBUG] No session token found");
       throw new AuthenticationError("Please log in to use this feature");
     }
 
-    const userId = sessionResponse.user.id;
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL!,
+    });
+
+    console.log("[DEBUG] Checking session in database");
+    const sessionResult = await pool.query(
+      'SELECT * FROM "session" WHERE "token" = $1 AND "expiresAt" > $2',
+      [sessionToken, new Date()]
+    );
+
+    console.log(
+      "[DEBUG] Session query result rows:",
+      sessionResult.rows.length
+    );
+
+    if (sessionResult.rows.length === 0) {
+      await pool.end();
+      console.log("[DEBUG] No valid session found");
+      throw new AuthenticationError("Invalid or expired session");
+    }
+
+    const session = sessionResult.rows[0];
+    const userId = session.userId;
     console.log("[DEBUG] User ID:", userId);
+    await pool.end();
 
     console.log("[DEBUG] Parsing request body");
     const body = await request.json();
