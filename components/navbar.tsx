@@ -28,10 +28,24 @@ function UserCredits() {
 }
 
 export function Navbar() {
-  const { data: session, isPending } = useSimpleSession();
+  const { data: session, isPending, refreshSession } = useSimpleSession();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Listen for login/logout events
+  useEffect(() => {
+    const handleAuthChange = () => {
+      refreshSession();
+    };
+
+    // Listen for custom auth events
+    window.addEventListener('auth-change', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('auth-change', handleAuthChange);
+    };
+  }, [refreshSession]);
 
   // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
@@ -51,6 +65,9 @@ export function Navbar() {
       });
       
       if (response.ok) {
+        // Dispatch auth-change event to update navbar
+        window.dispatchEvent(new CustomEvent('auth-change'));
+        
         // Small delay to ensure the session is cleared
         setTimeout(() => {
           router.refresh();

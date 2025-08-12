@@ -20,6 +20,10 @@ export default function LoginPage() {
     try {
       const result = await simpleAuthClient.signIn(email, password);
       console.log("Sign in successful:", result);
+      
+      // Dispatch auth-change event to update navbar
+      window.dispatchEvent(new CustomEvent('auth-change'));
+      
       router.push("/dashboard");
     } catch (error) {
       console.error("Sign in error:", error);

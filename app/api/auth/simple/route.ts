@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
     });
 
     return response;

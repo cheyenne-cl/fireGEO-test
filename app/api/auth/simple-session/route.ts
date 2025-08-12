@@ -6,8 +6,12 @@ export async function GET(request: NextRequest) {
     const sessionToken = request.cookies.get('session-token')?.value;
     
     // Debug: log all cookies
+    console.log('=== SIMPLE SESSION DEBUG ===');
     console.log('All cookies:', request.cookies.getAll());
     console.log('Session token:', sessionToken);
+    console.log('User agent:', request.headers.get('user-agent'));
+    console.log('Origin:', request.headers.get('origin'));
+    console.log('Referer:', request.headers.get('referer'));
     
     if (!sessionToken) {
       return NextResponse.json({ error: "No session" }, { status: 401 });

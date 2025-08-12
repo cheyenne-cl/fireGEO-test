@@ -21,6 +21,10 @@ export default function RegisterPage() {
     try {
       const result = await simpleAuthClient.signUp(email, password, name);
       console.log("Sign up successful:", result);
+      
+      // Dispatch auth-change event to update navbar
+      window.dispatchEvent(new CustomEvent('auth-change'));
+      
       router.push("/dashboard");
     } catch (error) {
       console.error("Sign up error:", error);
