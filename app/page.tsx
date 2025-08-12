@@ -20,12 +20,6 @@ export default function Home() {
             >
               Try Brand Monitor
             </Link>
-            <Link 
-              href="/pricing-public"
-              className="bg-white hover:bg-gray-50 text-blue-600 font-semibold py-3 px-8 rounded-lg border-2 border-blue-600 transition-colors"
-            >
-              View Pricing
-            </Link>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 mt-16">

@@ -155,12 +155,9 @@ fire-saas-geo-latest/
 │   │   └── chat/         # AI chat endpoints
 │   ├── (auth)/           # Auth pages (login, register, reset)
 │   ├── dashboard/        # User dashboard
-│   ├── chat/             # AI chat interface
-│   ├── brand-monitor/    # Brand monitoring tool
-│   └── pricing/          # Subscription plans
+│   └── brand-monitor/    # Brand monitoring tool
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components
-│   ├── autumn/           # Billing components
 │   └── brand-monitor/    # Brand monitor UI
 ├── lib/                   # Utility functions
 │   ├── auth.ts           # Auth configuration
@@ -182,49 +179,15 @@ Create a PostgreSQL database at [Supabase](https://supabase.com)
 - Go to Settings → Database
 - Copy the connection string (use "Transaction" mode) to `DATABASE_URL` in `.env.local`
 
-#### Autumn Billing (Detailed Setup)
 
-1. **Create Account**
-   - Sign up at [useautumn.com](https://useautumn.com)
-   - Complete email verification
 
-2. **Get API Key**
-   - Navigate to Settings → Developer
-   - Click "Create API Key"
-   - Copy the key to `AUTUMN_SECRET_KEY` in `.env.local`
 
-3. **Add Stripe Integration**
-   - Go to Integrations → Stripe in Autumn dashboard
-   - Add your Stripe secret key
-   - Autumn handles all webhook configuration automatically
-
-4. **Create Usage Feature**
-   - Go to Features → Create Feature
-   - **Name**: `Messages`
-   - **ID**: `messages` (must match exactly)
-   - **Type**: Select `Usage`
-   - **Unit**: `message`
-   - Click "Create Feature"
-
-5. **Create Free Product**
    - Go to Products → Create Product
    - **Name**: `Free`
    - **ID**: Leave blank (auto-generated)
    - **Price**: `$0/month`
    - **Features**: 
-     - Add `Messages` feature
-     - Set limit to `100`
-   - Click "Create Product"
 
-6. **Create Pro Product**
-   - Go to Products → Create Product
-   - **Name**: `Pro`
-   - **ID**: `pro` (must match exactly)
-   - **Price**: `$20/month`
-   - **Features**:
-     - Add `Messages` feature
-     - Set limit to `0` (unlimited)
-   - Click "Create Product"
 
 #### Email
 Sign up at [resend.com](https://resend.com)
@@ -263,8 +226,7 @@ BETTER_AUTH_SECRET=        # Generated with openssl
 BETTER_AUTH_URL=           # Your app URL
 NEXT_PUBLIC_APP_URL=       # Public app URL
 
-# Billing
-AUTUMN_SECRET_KEY=         # From Autumn dashboard
+
 
 # Brand Monitor
 FIRECRAWL_API_KEY=         # From Firecrawl

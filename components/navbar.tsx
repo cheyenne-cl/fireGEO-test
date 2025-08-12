@@ -102,13 +102,6 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Always show Plans link */}
-            <Link
-              href="/plans"
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-            >
-              Plans
-            </Link>
             
             {/* Show session-dependent content only after mount */}
             {mounted && session && (

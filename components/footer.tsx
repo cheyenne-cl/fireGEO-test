@@ -57,11 +57,7 @@ export function Footer() {
           <div>
             <h3 className="text-zinc-900 font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/plans" className="hover:text-zinc-900 transition-colors">
-                  Plans
-                </Link>
-              </li>
+
               <li>
                 <a href="#" className="hover:text-zinc-900 transition-colors">
                   Documentation
