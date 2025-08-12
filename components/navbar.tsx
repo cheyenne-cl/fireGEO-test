@@ -5,28 +5,9 @@ import Image from 'next/image';
 import { useSimpleSession } from '@/lib/simple-session';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useCredits } from '@/hooks/useCredits';
 
 
-function UserCredits() {
-  const { data: credits, isLoading } = useCredits();
-  const remainingCredits = credits?.balance || 0;
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center text-sm font-medium text-gray-700">
-        <span>Loading...</span>
-      </div>
-    );
-  }
-    
-  return (
-    <div className="flex items-center text-sm font-medium text-gray-700">
-      <span>{remainingCredits}</span>
-      <span className="ml-1">credits</span>
-    </div>
-  );
-}
+
 
 export function Navbar() {
   const { data: session, isPending, refreshSession } = useSimpleSession();
@@ -112,7 +93,13 @@ export function Navbar() {
                 >
                   Brand Monitor
                 </Link>
-                <UserCredits />
+                <Link
+                  href="/dashboard"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Dashboard
+                </Link>
+
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">
                     {session.user?.name || session.user?.email}

@@ -16,8 +16,7 @@ export const ROLE_SYSTEM = 'system';
 // ============================================
 // Credit/Usage Constants
 // ============================================
-export const CREDITS_PER_MESSAGE = 1;
-export const CREDITS_PER_BRAND_ANALYSIS = 10;
+
 export const FREE_TIER_MESSAGES = 100;
 export const STARTER_TIER_MESSAGES = 1000;
 export const PRO_TIER_MESSAGES = 10000;
@@ -99,7 +98,6 @@ export const GOOGLE_FAVICON_API = 'https://www.google.com/s2/favicons?domain=';
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  CREDITS: '/api/credits',
   USER_PROFILE: '/api/user/profile',
   USER_SETTINGS: '/api/user/settings',
   BRAND_MONITOR_ANALYZE: '/api/brand-monitor/analyze',
@@ -148,7 +146,6 @@ export const SSE_EVENTS = {
   PARTIAL_RESULT: 'partial-result',
   COMPLETE: 'complete',
   ERROR: 'error',
-  CREDITS: 'credits',
   COMPETITOR_FOUND: 'competitor-found',
   PROMPT_GENERATED: 'prompt-generated',
   ANALYSIS_PROGRESS: 'analysis-progress',
@@ -236,8 +233,7 @@ export const ERROR_MESSAGES = {
   INVALID_MESSAGE: 'Invalid message',
   FAILED_TO_CHECK_ACCESS: 'Failed to check access',
   FAILED_TO_TRACK_USAGE: 'Failed to track usage',
-  NO_CREDITS_REMAINING: 'No credits remaining. Please upgrade your plan',
-  INSUFFICIENT_CREDITS_BRAND_ANALYSIS: 'You need at least 10 credits for a brand analysis',
+
 } as const;
 
 // ============================================
@@ -247,5 +243,4 @@ export const CACHE_KEYS = {
   USER_PROFILE: 'user-profile',
   USER_SETTINGS: 'user-settings',
   CONVERSATIONS: 'conversations',
-  CREDITS: 'credits',
 } as const;

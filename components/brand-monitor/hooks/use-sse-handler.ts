@@ -15,14 +15,12 @@ import {
 interface UseSSEHandlerProps {
   state: BrandMonitorState;
   dispatch: React.Dispatch<BrandMonitorAction>;
-  onCreditsUpdate?: () => void;
   onAnalysisComplete?: (analysis: any) => void;
 }
 
 export function useSSEHandler({
   state,
   dispatch,
-  onCreditsUpdate,
   onAnalysisComplete,
 }: UseSSEHandlerProps) {
   // Use ref to track current prompt status to avoid closure issues in SSE handler
@@ -41,12 +39,7 @@ export function useSSEHandler({
     console.log("[SSE] Received event:", eventData.type, eventData.data);
 
     switch (eventData.type) {
-      case "credits":
-        // Handle credit update event
-        if (onCreditsUpdate) {
-          onCreditsUpdate();
-        }
-        break;
+
 
       case "progress":
         const progressData = eventData.data as ProgressData;
@@ -279,10 +272,7 @@ export function useSSEHandler({
           type: "ANALYSIS_COMPLETE",
           payload: analysisData,
         });
-        // Update credits after analysis is complete
-        if (onCreditsUpdate) {
-          onCreditsUpdate();
-        }
+
         // Call the completion callback
         if (onAnalysisComplete) {
           onAnalysisComplete(analysisData);

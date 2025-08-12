@@ -16,7 +16,7 @@ export default function BrandMonitorPage() {
             </p>
           </div>
           
-          <BrandMonitor creditsAvailable={100} />
+          <BrandMonitor />
         </div>
       </div>
     </div>

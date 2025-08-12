@@ -5,7 +5,6 @@ import {
   handleApiError,
   AuthenticationError,
   ValidationError,
-  InsufficientCreditsError,
 } from "@/lib/api-errors";
 
 export async function POST(request: NextRequest) {
@@ -35,18 +34,7 @@ export async function POST(request: NextRequest) {
     const userId = session.userId;
     await pool.end();
 
-    // Check if user has enough credits (1 credit for URL scraping)
-    // Hardcoded to 100 credits for now
-    const userCredits = 100;
-    const requiredCredits = 1;
 
-    if (userCredits < requiredCredits) {
-      throw new InsufficientCreditsError(
-        "Insufficient credits. You need at least 1 credit to analyze a URL.",
-        requiredCredits,
-        userCredits
-      );
-    }
 
     const { url, maxAge } = await request.json();
 

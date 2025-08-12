@@ -15,9 +15,7 @@ export function ErrorMessage({ error, onDismiss, onRetry }: ErrorMessageProps) {
     if (error.toLowerCase().includes('url') || error.toLowerCase().includes('scrape')) {
       return 'Please check the URL and try again. Make sure the website is accessible.';
     }
-    if (error.toLowerCase().includes('credits') || error.toLowerCase().includes('insufficient')) {
-      return 'You need more credits to perform this analysis. Please upgrade your plan.';
-    }
+    
     if (error.toLowerCase().includes('network') || error.toLowerCase().includes('connection')) {
       return 'Please check your internet connection and try again.';
     }

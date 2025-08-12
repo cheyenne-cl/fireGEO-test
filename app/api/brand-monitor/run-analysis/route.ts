@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       start(controller) {
         const encoder = new TextEncoder();
 
-        const sendEvent = async (event: any) => {
+        const sendEvent = async (event: Record<string, unknown>) => {
           const message = createSSEMessage(event);
           controller.enqueue(encoder.encode(message));
         };

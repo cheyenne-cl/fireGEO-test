@@ -4,7 +4,7 @@ import React, { useReducer, useCallback, useState, useEffect, useRef } from 'rea
 import { Company } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
-import { CREDITS_PER_BRAND_ANALYSIS } from '@/config/constants';
+
 import { ClientApiError } from '@/lib/client-errors';
 import { 
   brandMonitorReducer, 
@@ -43,15 +43,11 @@ import { TargetingOptions } from './targeting-options';
 import { useSSEHandler } from './hooks/use-sse-handler';
 
 interface BrandMonitorProps {
-  creditsAvailable?: number;
-  onCreditsUpdate?: () => void;
   selectedAnalysis?: any;
   onSaveAnalysis?: (analysis: any) => void;
 }
 
 export function BrandMonitor({ 
-  creditsAvailable = 0, 
-  onCreditsUpdate,
   selectedAnalysis,
   onSaveAnalysis 
 }: BrandMonitorProps = {}) {
@@ -71,7 +67,6 @@ export function BrandMonitor({
   const { startSSEConnection } = useSSEHandler({ 
     state, 
     dispatch, 
-    onCreditsUpdate,
     onAnalysisComplete: (completedAnalysis) => {
       // Only save if this is a new analysis (not loaded from existing)
       if (!selectedAnalysis && !hasSavedRef.current) {
@@ -89,7 +84,7 @@ export function BrandMonitor({
           analysisData: completedAnalysis,
           competitors: identifiedCompetitors,
           prompts: analyzingPrompts,
-          creditsUsed: CREDITS_PER_BRAND_ANALYSIS
+          creditsUsed: 10
         };
         
         
@@ -198,11 +193,7 @@ export function BrandMonitor({
       return;
     }
 
-    // Check if user has enough credits for initial scrape (1 credit)
-    if (creditsAvailable < 1) {
-      dispatch({ type: 'SET_ERROR', payload: 'Insufficient credits. You need at least 1 credit to analyze a URL.' });
-      return;
-    }
+
 
     console.log('Starting scrape for URL:', url);
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -242,10 +233,7 @@ export function BrandMonitor({
         throw new Error('No company data received');
       }
       
-      // Scrape was successful - credits have been deducted, refresh the navbar
-      if (onCreditsUpdate) {
-        onCreditsUpdate();
-      }
+      
       
       // Start fade out transition
       dispatch({ type: 'SET_SHOW_INPUT', payload: false });
@@ -271,7 +259,7 @@ export function BrandMonitor({
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [url, creditsAvailable, onCreditsUpdate]);
+  }, [url]);
   
   const handlePrepareAnalysis = useCallback(async () => {
     if (!company) return;
@@ -404,16 +392,7 @@ export function BrandMonitor({
     // Reset saved flag for new analysis
     hasSavedRef.current = false;
 
-    // Check if user has enough credits
-    if (creditsAvailable < CREDITS_PER_BRAND_ANALYSIS) {
-      dispatch({ type: 'SET_ERROR', payload: `Insufficient credits. You need at least ${CREDITS_PER_BRAND_ANALYSIS} credits to run an analysis.` });
-      return;
-    }
 
-    // Immediately trigger credit update to reflect deduction in navbar
-    if (onCreditsUpdate) {
-      onCreditsUpdate();
-    }
 
     // Collect all prompts (default + custom)
     const serviceType = detectServiceType(company);
@@ -512,7 +491,7 @@ export function BrandMonitor({
       dispatch({ type: 'SET_ANALYZING', payload: false });
       return;
     }
-  }, [company, removedDefaultPrompts, customPrompts, identifiedCompetitors, startSSEConnection, creditsAvailable]);
+  }, [company, removedDefaultPrompts, customPrompts, identifiedCompetitors, startSSEConnection]);
   
   const handleRestart = useCallback(() => {
     dispatch({ type: 'RESET_STATE' });

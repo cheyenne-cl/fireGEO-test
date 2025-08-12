@@ -45,38 +45,19 @@ const MARKET_SEGMENTS = [
 
 export function TargetingOptions({ 
   onOptionsChange, 
-  isExpanded = false, 
-  onToggleExpanded 
 }: TargetingOptionsProps) {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedSegment, setSelectedSegment] = useState<string>("");
 
-  const handleOptionChange = () => {
+  React.useEffect(() => {
     const options = {
-      targetSize: selectedSize as any || undefined,
+      targetSize: selectedSize ? selectedSize as "startup" | "small" | "medium" | "large" | "enterprise" : undefined,
       geographicRegion: selectedRegion || undefined,
-      marketSegment: selectedSegment as any || undefined,
+      marketSegment: selectedSegment ? selectedSegment as "local" | "regional" | "national" | "global" : undefined,
     };
     onOptionsChange(options);
-  };
-
-  React.useEffect(() => {
-    handleOptionChange();
-  }, [selectedSize, selectedRegion, selectedSegment]);
-
-  if (!isExpanded) {
-    return (
-      <Button
-        variant="outline"
-        onClick={onToggleExpanded}
-        className="w-full mb-4"
-      >
-        <Target className="w-4 h-4 mr-2" />
-        Configure Targeting Options
-      </Button>
-    );
-  }
+  }, [selectedSize, selectedRegion, selectedSegment, onOptionsChange]);
 
   return (
     <Card className="mb-4">
@@ -197,14 +178,6 @@ export function TargetingOptions({
             </div>
           </div>
         )}
-
-        <Button
-          variant="outline"
-          onClick={onToggleExpanded}
-          className="w-full"
-        >
-          Hide Targeting Options
-        </Button>
       </CardContent>
     </Card>
   );

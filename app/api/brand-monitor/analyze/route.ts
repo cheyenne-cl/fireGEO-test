@@ -6,7 +6,6 @@ import { eq } from "drizzle-orm";
 import {
   AuthenticationError,
   ValidationError,
-  InsufficientCreditsError,
 } from "@/lib/api-errors";
 import { performAnalysis } from "@/lib/analyze-common";
 
@@ -32,49 +31,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Check if user has enough credits (10 credits for analysis)
-    const userCredits = 100; // Hardcoded for now
-    const requiredCredits = 10;
 
-    if (userCredits < requiredCredits) {
-      throw new InsufficientCreditsError(
-        "Insufficient credits. You need at least 10 credits to analyze a company.",
-        requiredCredits,
-        userCredits
-      );
-    }
-
-    // Track usage (10 credits)
-    try {
-      console.log(
-        "[Brand Monitor] Tracking usage - Customer ID:",
-        sessionResponse.user.id,
-        "Count:",
-        requiredCredits
-      );
-      const trackResult = await db.execute(
-        db.select().from(brandAnalyses).where(eq(brandAnalyses.id, analysisId))
-      );
-      console.log(
-        "[Brand Monitor] Track result:",
-        JSON.stringify(trackResult, null, 2)
-      );
-    } catch (err) {
-      console.error("[Brand Monitor] Failed to track usage:", err);
-      // Log more details about the error
-      if (err instanceof Error) {
-        console.error("[Brand Monitor] Error details:", {
-          message: err.message,
-          stack: err.stack,
-          response: (err as any).response?.data,
-        });
-      }
-      throw new InsufficientCreditsError(
-        "Unable to process credit deduction. Please try again",
-        requiredCredits,
-        userCredits
-      );
-    }
 
     const {
       prompts: customPrompts,
@@ -88,10 +45,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Track usage with Autumn (deduct credits)
+    // Record the analysis
     try {
       console.log(
-        "[Brand Monitor] Recording usage - Customer ID:",
+        "[Brand Monitor] Recording analysis - User ID:",
         sessionResponse.user.id
       );
       await db.execute(
@@ -103,30 +60,15 @@ export async function POST(request: NextRequest) {
           industry: company.industry,
           competitors: JSON.stringify(userSelectedCompetitors),
           prompts: JSON.stringify(customPrompts),
-          creditsUsed: requiredCredits,
+          creditsUsed: 10,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
       );
-      console.log("[Brand Monitor] Usage recorded successfully");
+      console.log("[Brand Monitor] Analysis recorded successfully");
     } catch (err) {
-      console.error("Failed to track usage:", err);
-      throw new InsufficientCreditsError(
-        "Unable to process credit deduction. Please try again",
-        requiredCredits,
-        userCredits
-      );
-    }
-
-    // Get remaining credits after deduction
-    let remainingCredits = userCredits;
-    try {
-      const usage = await db.query.brandAnalyses.findFirst({
-        where: eq(brandAnalyses.id, analysisId),
-      });
-      remainingCredits = usage?.creditsUsed || 0;
-    } catch (err) {
-      console.error("Failed to get remaining credits:", err);
+      console.error("Failed to record analysis:", err);
+      throw new Error("Unable to record analysis. Please try again");
     }
 
     // Create a TransformStream for SSE
@@ -144,12 +86,11 @@ export async function POST(request: NextRequest) {
       try {
         // Send initial credit info
         await sendEvent({
-          type: "credits",
-          stage: "credits",
-          data: {
-            remainingCredits,
-            creditsUsed: requiredCredits,
-          },
+                  type: "progress",
+        stage: "complete",
+        data: {
+          message: "Analysis completed successfully",
+        },
           timestamp: new Date(),
         });
 
@@ -200,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     if (
       error instanceof AuthenticationError ||
-      error instanceof InsufficientCreditsError ||
+
       error instanceof ValidationError
     ) {
       return new Response(
@@ -210,13 +151,7 @@ export async function POST(request: NextRequest) {
             code: error.code,
             statusCode: error.statusCode,
             timestamp: new Date().toISOString(),
-            metadata:
-              error instanceof InsufficientCreditsError
-                ? {
-                    creditsRequired: error.creditsRequired,
-                    creditsAvailable: error.creditsAvailable,
-                  }
-                : undefined,
+            metadata: undefined,
           },
         }),
         {
