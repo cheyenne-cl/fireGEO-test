@@ -57,12 +57,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a simple session
+    const sessionId = crypto.randomBytes(32).toString("hex");
     const sessionToken = crypto.randomBytes(32).toString("hex");
 
     await pool.query(
       'INSERT INTO "session" ("id", "token", "userId", "expiresAt", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6)',
       [
-        sessionToken,
+        sessionId,
         sessionToken,
         user.id,
         new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
