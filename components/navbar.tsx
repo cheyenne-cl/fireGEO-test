@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { useSimpleSession } from '@/lib/simple-session';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useCredits } from '@/hooks/useMessages';
+import { useCredits } from '@/hooks/useCredits';
+
 
 function UserCredits() {
   const { data: credits, isLoading } = useCredits();
