@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from '@/lib/auth-client';
+import { useSimpleSession } from '@/lib/simple-session';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { User, Mail, BarChart3, Target, TrendingUp, Activity, Loader2 } from 'lucide-react';
@@ -14,7 +14,7 @@ interface UserStats {
 }
 
 export default function DashboardPage() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = useSimpleSession();
   const router = useRouter();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -98,128 +98,93 @@ export default function DashboardPage() {
               </label>
               <p className="text-gray-900">{session.user?.email}</p>
             </div>
-            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <User className="inline-block h-4 w-4 mr-1" />
-                Account Status
+                Name
               </label>
-              <p className="text-gray-900">Active</p>
+              <p className="text-gray-900">{session.user?.name}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Analyses Run</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loadingStats ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.analysesRun || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Target className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Competitors Tracked</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loadingStats ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.competitorsTracked || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Insights Generated</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loadingStats ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.insightsGenerated || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Activity className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Recent Activity</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loadingStats ? <Loader2 className="h-6 w-6 animate-spin" /> : stats?.recentActivity || 0}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button 
               onClick={() => router.push('/brand-monitor')}
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
             >
-              <Target className="h-6 w-6" />
-              <span className="font-medium">Brand Monitor</span>
-              <span className="text-xs opacity-90">Analyze your brand</span>
+              <Target className="h-4 w-4 mr-2" />
+              Start Brand Analysis
             </Button>
-            
             <Button 
               onClick={() => router.push('/chat')}
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             >
-              <Activity className="h-6 w-6" />
-              <span className="font-medium">AI Chat</span>
-              <span className="text-xs opacity-90">Get insights</span>
+              <Activity className="h-4 w-4 mr-2" />
+              Chat with AI
             </Button>
-            
-            <Button 
-              onClick={() => router.push('/plans')}
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-            >
-              <TrendingUp className="h-6 w-6" />
-              <span className="font-medium">Upgrade Plan</span>
-              <span className="text-xs opacity-90">Get more features</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Activity</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <BarChart3 className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              {loadingStats ? (
-                <Loader2 className="h-6 w-6 text-orange-600 mx-auto mb-2 animate-spin" />
-              ) : (
-                <p className="text-2xl font-bold text-gray-900">{stats?.analysesRun || 0}</p>
-              )}
-              <p className="text-sm text-gray-600">Analyses Run</p>
-            </div>
-            
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              {loadingStats ? (
-                <Loader2 className="h-6 w-6 text-blue-600 mx-auto mb-2 animate-spin" />
-              ) : (
-                <p className="text-2xl font-bold text-gray-900">{stats?.competitorsTracked || 0}</p>
-              )}
-              <p className="text-sm text-gray-600">Competitors Tracked</p>
-            </div>
-            
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              {loadingStats ? (
-                <Loader2 className="h-6 w-6 text-green-600 mx-auto mb-2 animate-spin" />
-              ) : (
-                <p className="text-2xl font-bold text-gray-900">{stats?.insightsGenerated || 0}</p>
-              )}
-              <p className="text-sm text-gray-600">Insights Generated</p>
-            </div>
-          </div>
-          
-          {/* Recent Activity Indicator */}
-          {stats && stats.recentActivity > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                🎉 You've completed {stats.recentActivity} analysis{stats.recentActivity !== 1 ? 'es' : ''} in the last 7 days!
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Getting Started */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-xs font-bold text-orange-600">1</span>
-              </div>
-              <div>
-                <h3 className="font-medium">Start Your First Analysis</h3>
-                <p className="text-sm text-gray-600">Use Brand Monitor to analyze your brand's visibility and compare it with competitors.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-xs font-bold text-blue-600">2</span>
-              </div>
-              <div>
-                <h3 className="font-medium">Get AI Insights</h3>
-                <p className="text-sm text-gray-600">Chat with our AI to get personalized recommendations and insights about your brand.</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <span className="text-xs font-bold text-green-600">3</span>
-              </div>
-              <div>
-                <h3 className="font-medium">Track Your Progress</h3>
-                <p className="text-sm text-gray-600">Monitor your brand's performance over time and see how you stack up against competitors.</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSession, signOut } from '@/lib/auth-client';
+import { useSimpleSession } from '@/lib/simple-session';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useCredits } from '@/hooks/useMessages';
@@ -28,7 +28,7 @@ function UserCredits() {
 }
 
 export function Navbar() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = useSimpleSession();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -38,15 +38,28 @@ export function Navbar() {
     setMounted(true);
   }, []);
 
+  // Debug: log session state
+  useEffect(() => {
+    console.log('Navbar session state:', { session, isPending });
+  }, [session, isPending]);
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await signOut();
-      // Small delay to ensure the session is cleared
-      setTimeout(() => {
-        router.refresh();
+      const response = await fetch('/api/auth/simple-signout', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        // Small delay to ensure the session is cleared
+        setTimeout(() => {
+          router.refresh();
+          setIsLoggingOut(false);
+        }, 100);
+      } else {
+        console.error('Logout failed');
         setIsLoggingOut(false);
-      }, 100);
+      }
     } catch (error) {
       console.error('Logout error:', error);
       setIsLoggingOut(false);
@@ -95,43 +108,43 @@ export function Navbar() {
                   Brand Monitor
                 </Link>
                 <UserCredits />
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">
+                    {session.user?.name || session.user?.email}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 disabled:opacity-50"
+                  >
+                    {isLoggingOut ? 'Signing out...' : 'Sign out'}
+                  </button>
+                </div>
               </>
             )}
             
-            {mounted && isPending ? (
+            {/* Show loading state while checking session */}
+            {mounted && isPending && (
               <div className="text-sm text-gray-400">Loading...</div>
-            ) : mounted && session ? (
+            )}
+            
+            {/* Show login/register when not logged in */}
+            {mounted && !session && !isPending && (
               <>
                 <Link
-                  href="/dashboard"
-                  className="btn-firecrawl-orange inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 h-8 px-3"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="btn-firecrawl-default inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 h-8 px-3"
-                >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
-                </button>
-              </>
-            ) : mounted ? (
-              <>
-                <Link 
                   href="/login"
-                  className="bg-black text-white hover:bg-gray-800 inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 h-8 px-3 shadow-sm hover:shadow-md"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
-                  Login
+                  Sign in
                 </Link>
-                <Link 
+                <Link
                   href="/register"
-                  className="btn-firecrawl-orange inline-flex items-center justify-center whitespace-nowrap rounded-[10px] text-sm font-medium transition-all duration-200 h-8 px-3"
+                  className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md"
                 >
-                  Register
+                  Sign up
                 </Link>
               </>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
