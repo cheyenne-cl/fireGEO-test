@@ -99,7 +99,6 @@ export const GOOGLE_FAVICON_API = 'https://www.google.com/s2/favicons?domain=';
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  CHAT: '/api/chat',
   CREDITS: '/api/credits',
   USER_PROFILE: '/api/user/profile',
   USER_SETTINGS: '/api/user/settings',
@@ -108,7 +107,6 @@ export const API_ENDPOINTS = {
   BRAND_MONITOR_BATCH_SCRAPE: '/api/brand-monitor/batch-scrape',
   BRAND_MONITOR_WEB_SEARCH: '/api/brand-monitor/web-search',
   BRAND_MONITOR_CHECK_PROVIDERS: '/api/brand-monitor/check-providers',
-  CHAT_FEEDBACK: '/api/chat/feedback',
 } as const;
 
 // ============================================

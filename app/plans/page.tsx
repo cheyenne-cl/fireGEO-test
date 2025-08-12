@@ -15,8 +15,8 @@ const staticProducts = [
     },
     items: [
       { 
-        primaryText: "10 messages per month",
-        secondaryText: "AI-powered chat responses"
+        primaryText: "5 brand analyses per month",
+        secondaryText: "Advanced brand monitoring"
       },
       {
         primaryText: "Community support",
@@ -39,8 +39,8 @@ const staticProducts = [
     },
     items: [
       { 
-        primaryText: "100 messages per month",
-        secondaryText: "AI-powered chat responses"
+        primaryText: "50 brand analyses per month",
+        secondaryText: "Advanced brand monitoring"
       },
       {
         primaryText: "Premium support",

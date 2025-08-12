@@ -113,12 +113,6 @@ export function Navbar() {
             {mounted && session && (
               <>
                 <Link
-                  href="/chat"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Basic Chat
-                </Link>
-                <Link
                   href="/brand-monitor"
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >

@@ -170,20 +170,13 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <Button 
               onClick={() => router.push('/brand-monitor')}
               className="w-full bg-orange-600 hover:bg-orange-700 text-white"
             >
               <Target className="h-4 w-4 mr-2" />
               Start Brand Analysis
-            </Button>
-            <Button 
-              onClick={() => router.push('/chat')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Activity className="h-4 w-4 mr-2" />
-              Chat with AI
             </Button>
           </div>
         </div>
