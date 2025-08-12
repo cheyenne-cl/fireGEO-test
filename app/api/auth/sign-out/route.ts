@@ -1,12 +1,11 @@
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/better-auth.config";
 
 export async function POST(request: NextRequest) {
   try {
-    const result = await auth.api.signOut({ headers: request.headers });
-    return NextResponse.json(result);
+    const response = await auth.api.signOut(request);
+    return response;
   } catch (error) {
-    console.error("Sign-out error:", error);
-    return NextResponse.json({ error: "Sign-out failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to sign out" }, { status: 500 });
   }
 }

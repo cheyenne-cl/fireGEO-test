@@ -1,31 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { getConfiguredProviders } from '@/lib/provider-config';
-import { handleApiError, AuthenticationError } from '@/lib/api-errors';
+import { NextRequest, NextResponse } from "next/server";
+import { Pool } from "pg";
+import { getEnabledProviders } from "@/lib/provider-config";
+import { handleApiError, AuthenticationError } from "@/lib/api-errors";
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the session
-    const sessionResponse = await auth.api.getSession({
-      headers: request.headers,
+    // Check session using simple auth
+    const sessionToken = request.cookies.get('session-token')?.value;
+    
+    if (!sessionToken) {
+      throw new AuthenticationError("Please log in to use this feature");
+    }
+
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL!,
     });
 
-    if (!sessionResponse?.user) {
-      throw new AuthenticationError('Please log in to use this feature');
+    const sessionResult = await pool.query(
+      'SELECT * FROM "session" WHERE "token" = $1 AND "expiresAt" > $2',
+      [sessionToken, new Date()]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      await pool.end();
+      throw new AuthenticationError("Invalid or expired session");
     }
 
-    const configuredProviders = getConfiguredProviders();
-    const providers = configuredProviders.map(p => p.name);
-    
-    if (providers.length === 0) {
-      return NextResponse.json({ 
-        providers: [], 
-        error: 'No AI providers configured. Please set at least one API key.' 
-      });
-    }
-    
-    return NextResponse.json({ providers });
+    await pool.end();
 
+    const providers = getEnabledProviders();
+    
+    return NextResponse.json({
+      providers: providers.map(provider => ({
+        id: provider.id,
+        name: provider.name,
+        enabled: provider.enabled
+      }))
+    });
   } catch (error) {
     return handleApiError(error);
   }

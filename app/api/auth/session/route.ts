@@ -1,21 +1,11 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/better-auth.config";
+import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    return NextResponse.json({
-      session: session || null,
-      cookies: request.headers.get("cookie"),
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    return NextResponse.json({
-      error: error.message,
-      session: null,
-    });
+    const session = await auth.api.getSession(request);
+    return NextResponse.json(session);
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to get session" }, { status: 500 });
   }
 }

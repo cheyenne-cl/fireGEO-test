@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { Pool } from "pg";
 import { db } from "@/lib/db";
 import { brandAnalyses, conversations, messages } from "@/lib/db/schema";
 import { eq, and, gte } from "drizzle-orm";
@@ -7,15 +7,30 @@ import { handleApiError, AuthenticationError } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionResponse = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    if (!sessionResponse?.user) {
+    // Check session using simple auth
+    const sessionToken = request.cookies.get('session-token')?.value;
+    
+    if (!sessionToken) {
       throw new AuthenticationError("Please log in to view your stats");
     }
 
-    const userId = sessionResponse.user.id;
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL!,
+    });
+
+    const sessionResult = await pool.query(
+      'SELECT * FROM "session" WHERE "token" = $1 AND "expiresAt" > $2',
+      [sessionToken, new Date()]
+    );
+
+    if (sessionResult.rows.length === 0) {
+      await pool.end();
+      throw new AuthenticationError("Invalid or expired session");
+    }
+
+    const session = sessionResult.rows[0];
+    const userId = session.userId;
+    await pool.end();
 
     // Get analyses count
     const analysesCount = await db

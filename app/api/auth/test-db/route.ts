@@ -1,56 +1,36 @@
-import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { NextResponse } from "next/server";
+import { Pool } from "pg";
 
 export async function GET() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL!,
-  });
-
   try {
-    // Check if tables exist
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL!,
+    });
+
+    // Check if auth tables exist
     const tablesResult = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_type = 'BASE TABLE'
-      ORDER BY table_name;
+      AND table_name LIKE '%auth%' OR table_name LIKE '%user%'
     `);
 
-    // Count users
-    let userCount = 0;
-    let users = [];
-    try {
-      const userResult = await pool.query('SELECT id, email, name, "createdAt" FROM "user" ORDER BY "createdAt" DESC LIMIT 10');
-      userCount = userResult.rowCount || 0;
-      users = userResult.rows;
-    } catch (error) {
-      console.error('Error querying users:', error);
-    }
+    const tables = tablesResult.rows.map(row => row.table_name);
 
-    // Count sessions
-    let sessionCount = 0;
-    try {
-      const sessionResult = await pool.query('SELECT COUNT(*) FROM "session"');
-      sessionCount = parseInt(sessionResult.rows[0].count);
-    } catch (error) {
-      console.error('Error counting sessions:', error);
-    }
+    await pool.end();
 
     return NextResponse.json({
-      tables: tablesResult.rows.map(row => row.table_name),
-      userCount,
-      sessionCount,
-      recentUsers: users,
-      databaseUrl: process.env.DATABASE_URL ? 'Set' : 'Not set',
-      betterAuthSecret: process.env.BETTER_AUTH_SECRET ? 'Set' : 'Not set',
+      success: true,
+      tables: tables,
+      hasAuthTables: tables.length > 0,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('Database test error:', error);
     return NextResponse.json({
-      error: 'Database connection error',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
     }, { status: 500 });
-  } finally {
-    await pool.end();
   }
 }
