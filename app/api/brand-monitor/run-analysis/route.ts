@@ -7,6 +7,7 @@ import {
   ValidationError,
 } from "@/lib/api-errors";
 import { createSSEMessage } from "@/lib/analyze-common";
+import { SSEEvent } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   console.log("[DEBUG] run-analysis route called");
@@ -66,8 +67,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Transform competitors to match expected format
-    const userSelectedCompetitors =
-      competitors?.map((comp: any) => ({ name: comp.name })) || [];
+    interface Competitor {
+      name: string;
+    }
+
+    const userSelectedCompetitors: Competitor[] = Array.isArray(competitors)
+      ? competitors.map((comp: { name: string }) => ({ name: comp.name }))
+      : [];
     console.log("[DEBUG] Transformed competitors:", userSelectedCompetitors);
 
     console.log("[DEBUG] Creating SSE stream");
@@ -76,7 +82,7 @@ export async function POST(request: NextRequest) {
       start(controller) {
         const encoder = new TextEncoder();
 
-        const sendEvent = async (event: Record<string, unknown>) => {
+        const sendEvent = async (event: SSEEvent<unknown>) => {
           const message = createSSEMessage(event);
           controller.enqueue(encoder.encode(message));
         };
@@ -141,7 +147,7 @@ export async function POST(request: NextRequest) {
             );
             await sendEvent({
               type: "error",
-              stage: "error",
+              stage: "finalizing",
               data: {
                 message:
                   error instanceof Error ? error.message : "Analysis failed",

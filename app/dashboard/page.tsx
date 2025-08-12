@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { User, Mail, BarChart3, Target, TrendingUp, Activity, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ComposeLabsRating } from '@/components/compose-labs-rating';
 
 interface UserStats {
   analysesRun: number;
@@ -165,6 +166,11 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Compose Labs Rating */}
+        <div className="mb-8">
+          <ComposeLabsRating />
         </div>
 
         {/* Quick Actions */}
