@@ -3,10 +3,14 @@ import {
   AnalysisProgressData,
   Company,
   PartialResultData,
-  ProgressData,
   PromptGeneratedData,
+  ProgressData,
   ScoringProgressData,
   SSEEvent,
+  BrandPrompt,
+  CompetitorRanking,
+  ProviderSpecificRanking,
+  ProviderComparisonData,
 } from "./types";
 import {
   generatePromptsForCompany,
@@ -30,12 +34,18 @@ export interface AnalysisConfig {
 export interface AnalysisResult {
   company: Company;
   knownCompetitors: string[];
-  prompts: any[];
+  prompts: BrandPrompt[];
   responses: AIResponse[];
-  scores: any;
-  competitors: any[];
-  providerRankings: any;
-  providerComparison: any;
+  scores: {
+    overallScore: number;
+    visibilityScore: number;
+    sentimentScore: number;
+    shareOfVoice: number;
+    averagePosition?: number;
+  };
+  competitors: CompetitorRanking[];
+  providerRankings: ProviderSpecificRanking[];
+  providerComparison: ProviderComparisonData[];
   errors?: string[];
   webSearchUsed?: boolean;
 }
@@ -115,7 +125,7 @@ export async function performAnalysis({
     analysisPrompts = customPrompts.map((prompt: string, index: number) => ({
       id: `custom-${index}`,
       prompt,
-      category: "custom" as const,
+      category: "ranking" as const,
     }));
   } else {
     const prompts = await generatePromptsForCompany(company, competitors);
@@ -190,6 +200,20 @@ export async function performAnalysis({
   // Check if we should use mock mode (no API keys configured)
   const useMockMode =
     process.env.USE_MOCK_MODE === "true" || availableProviders.length === 0;
+
+  console.log("Mock mode enabled:", useMockMode);
+  console.log("Available providers count:", availableProviders.length);
+
+  // If no providers are available and mock mode is not explicitly enabled,
+  // create a mock provider to ensure analysis can proceed
+  if (availableProviders.length === 0 && process.env.USE_MOCK_MODE !== "true") {
+    console.log("No providers available, creating mock provider for fallback");
+    availableProviders.push({
+      name: "Mock",
+      model: "mock",
+      icon: "🎭",
+    });
+  }
 
   // Process prompts in parallel batches of 3
   const BATCH_SIZE = 3;
@@ -463,11 +487,24 @@ export async function performAnalysis({
 export function getAvailableProviders() {
   const configuredProviders = getConfiguredProviders();
   // Map to the format expected by the rest of the code
-  return configuredProviders.map((provider) => ({
+  const providers = configuredProviders.map((provider) => ({
     name: provider.name,
     model: provider.defaultModel,
     icon: provider.icon,
   }));
+
+  // If no providers are configured and mock mode is not explicitly disabled,
+  // add a mock provider as fallback
+  if (providers.length === 0 && process.env.USE_MOCK_MODE !== "false") {
+    console.log("No AI providers configured, adding mock provider as fallback");
+    providers.push({
+      name: "Mock",
+      model: "mock",
+      icon: "🎭",
+    });
+  }
+
+  return providers;
 }
 
 /**

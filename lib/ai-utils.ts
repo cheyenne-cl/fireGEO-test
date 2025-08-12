@@ -446,8 +446,6 @@ export async function generatePromptsForCompany(
   const mainProducts = scrapedData?.mainProducts || [];
   const description = scrapedData?.description || company.description || "";
 
-
-
   // Build a more specific context from the scraped data
   let productContext = "";
   let categoryContext = "";
@@ -594,11 +592,49 @@ export async function analyzePromptWithProvider(
   competitors: string[],
   useMockMode: boolean = false
 ): Promise<AIResponse> {
-  // Remove mock mode - we'll handle failures properly
+  // Handle mock mode with simulated responses
   if (useMockMode) {
-    throw new Error(
-      "Mock mode is not supported. Please configure AI providers for analysis."
+    console.log(
+      `[MOCK] Simulating analysis for ${provider} with prompt: "${prompt.substring(0, 50)}..."`
     );
+
+    // Simulate processing time
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.random() * 2000 + 1000)
+    );
+
+    // Generate mock response
+    const mockResponse = {
+      provider: provider,
+      prompt,
+      response: `[MOCK] Analysis of ${brandName} and competitors: ${competitors.join(", ")}. This is a simulated response for testing purposes.`,
+      rankings: [
+        {
+          position: 1,
+          company: brandName,
+          reason: "Primary brand being analyzed",
+          sentiment: "neutral" as const,
+        },
+        ...competitors.slice(0, 3).map((comp, index) => ({
+          position: index + 2,
+          company: comp,
+          reason: "Competitor identified in analysis",
+          sentiment: "neutral" as const,
+        })),
+      ],
+      competitors: competitors.slice(0, 3),
+      brandMentioned: true,
+      brandPosition: 1,
+      sentiment: "neutral" as const,
+      confidence: 0.8,
+      timestamp: new Date(),
+      detectionDetails: {
+        brandMatches: [],
+        competitorMatches: new Map(),
+      },
+    };
+
+    return mockResponse;
   }
 
   // Normalize provider name for consistency
@@ -612,8 +648,6 @@ export async function analyzePromptWithProvider(
     // Return null to indicate this provider should be skipped
     return null as any;
   }
-
-
 
   const systemPrompt = `You are an AI assistant analyzing brand visibility and rankings.
 When responding to prompts about tools, platforms, or services:
@@ -631,8 +665,6 @@ When responding to prompts about tools, platforms, or services:
       prompt: `${systemPrompt}\n\nPrompt: ${prompt}`,
       temperature: 0.3,
     });
-
-
 
     // Then, generate structured analysis
 
@@ -691,8 +723,6 @@ Return a structured analysis including:
 
 Be objective and factual.`,
     });
-
-
 
     // Get the proper display name for the provider
     const providerDisplayName =
@@ -1038,7 +1068,6 @@ export async function analyzeCompetitorsByProvider(
   responses.forEach((response, index) => {
     const providerMap = providerData.get(response.provider);
     if (!providerMap) {
-  
       return;
     }
 
@@ -1079,7 +1108,6 @@ export async function analyzeCompetitorsByProvider(
 
     // Skip providers with no responses (failed providers)
     if (totalResponses === 0) {
-  
       return;
     }
 

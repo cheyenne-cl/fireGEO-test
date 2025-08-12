@@ -490,10 +490,14 @@ export function BrandMonitor({
       dispatch({ type: 'SET_PROMPT_COMPLETION_STATUS', payload: initialStatus });
 
       try {
+        // Generate a unique analysis ID
+        const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         await startSSEConnection('/api/brand-monitor/run-analysis', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
+            analysisId,
             company, 
             prompts: normalizedPrompts,
             competitors: identifiedCompetitors 

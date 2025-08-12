@@ -31,7 +31,7 @@ export interface CompetitorAnalysis {
   visibilityScore: number;
   mentionCount: number;
   averagePosition: number;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: "positive" | "neutral" | "negative";
   sentimentScore: number;
   shareOfVoice: number;
   weeklyChange?: number;
@@ -58,6 +58,12 @@ export interface Company {
   logo?: string;
   favicon?: string;
   scraped?: boolean;
+  services?: string[];
+  competitors?: string[];
+  website?: string;
+  founded?: string;
+  employees?: string;
+  location?: string;
   scrapedData?: {
     title: string;
     description: string;
@@ -79,7 +85,7 @@ export interface AIProvider {
 export interface BrandPrompt {
   id: string;
   prompt: string;
-  category: 'ranking' | 'comparison' | 'alternatives' | 'recommendations';
+  category: "ranking" | "comparison" | "alternatives" | "recommendations";
 }
 
 export interface AIResponse {
@@ -90,7 +96,7 @@ export interface AIResponse {
   competitors: string[];
   brandMentioned: boolean;
   brandPosition?: number;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: "positive" | "neutral" | "negative";
   confidence: number;
   timestamp: Date;
   // Enhanced detection information
@@ -100,15 +106,23 @@ export interface AIResponse {
       index: number;
       confidence: number;
     }[];
-    competitorMatches?: Map<string, {
-      text: string;
-      index: number;
-      confidence: number;
-    }[]> | Record<string, {
-      text: string;
-      index: number;
-      confidence: number;
-    }[]>;
+    competitorMatches?:
+      | Map<
+          string,
+          {
+            text: string;
+            index: number;
+            confidence: number;
+          }[]
+        >
+      | Record<
+          string,
+          {
+            text: string;
+            index: number;
+            confidence: number;
+          }[]
+        >;
   };
 }
 
@@ -116,7 +130,7 @@ export interface CompanyRanking {
   position: number;
   company: string;
   reason?: string;
-  sentiment?: 'positive' | 'neutral' | 'negative';
+  sentiment?: "positive" | "neutral" | "negative";
 }
 
 export interface BrandAnalysis {
@@ -141,20 +155,20 @@ export interface HistoricalDataPoint {
 }
 
 // SSE Event Types
-export type SSEEventType = 
-  | 'start'
-  | 'progress'
-  | 'stage'
-  | 'competitor-found'
-  | 'prompt-generated'
-  | 'analysis-start'
-  | 'analysis-progress'
-  | 'analysis-complete'
-  | 'scoring-start'
-  | 'scoring-complete'
-  | 'partial-result'
-  | 'complete'
-  | 'error';
+export type SSEEventType =
+  | "start"
+  | "progress"
+  | "stage"
+  | "competitor-found"
+  | "prompt-generated"
+  | "analysis-start"
+  | "analysis-progress"
+  | "analysis-complete"
+  | "scoring-start"
+  | "scoring-complete"
+  | "partial-result"
+  | "complete"
+  | "error";
 
 export interface SSEEvent<T = unknown> {
   type: SSEEventType;
@@ -163,13 +177,13 @@ export interface SSEEvent<T = unknown> {
   timestamp: Date;
 }
 
-export type AnalysisStage = 
-  | 'initializing'
-  | 'identifying-competitors'
-  | 'generating-prompts'
-  | 'analyzing-prompts'
-  | 'calculating-scores'
-  | 'finalizing';
+export type AnalysisStage =
+  | "initializing"
+  | "identifying-competitors"
+  | "generating-prompts"
+  | "analyzing-prompts"
+  | "calculating-scores"
+  | "finalizing";
 
 export interface ProgressData {
   stage: AnalysisStage;
@@ -198,7 +212,7 @@ export interface AnalysisProgressData {
   totalPrompts: number;
   providerIndex: number;
   totalProviders: number;
-  status: 'started' | 'completed' | 'failed';
+  status: "started" | "completed" | "failed";
 }
 
 export interface PartialResultData {
@@ -230,7 +244,7 @@ export interface CompetitorRanking {
   logo?: string;
   mentions: number;
   averagePosition: number;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: "positive" | "neutral" | "negative";
   sentimentScore: number;
   shareOfVoice: number;
   visibilityScore: number;
@@ -250,7 +264,7 @@ export interface ProviderComparisonData {
       visibilityScore: number;
       position: number;
       mentions: number;
-      sentiment: 'positive' | 'neutral' | 'negative';
+      sentiment: "positive" | "neutral" | "negative";
     };
   };
   isOwn?: boolean;
@@ -281,4 +295,4 @@ export const PROMPT_TEMPLATES = {
     "What's the best {industry} solution for enterprise use?",
     "Which {industry} platform offers the best value?",
   ],
-}; 
+};
