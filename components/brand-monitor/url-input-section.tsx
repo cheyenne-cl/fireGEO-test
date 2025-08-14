@@ -20,7 +20,7 @@ export function UrlInputSection({
 }: UrlInputSectionProps) {
   return (
     <div className="flex items-center justify-center animate-panel-in pb-12">
-      <div className="w-full max-w-5xl px-6">
+      <div className="w-full max-w-5xl ">
           <div className="relative">
             <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
             <input
@@ -29,8 +29,8 @@ export function UrlInputSection({
                 urlValid === false 
                   ? 'border-red-300 focus:ring-red-500 focus:border-transparent' 
                   : urlValid === true 
-                  ? 'border-orange-300 focus:ring-orange-500 focus:border-transparent'
-                  : 'border-gray-300 focus:ring-orange-500 focus:border-transparent'
+                  ? 'border-[#000589] focus:ring-[#000589] focus:border-transparent'
+                  : 'border-[#000589] focus:ring-[#000589] focus:border-transparent'
               }`}
               placeholder="Enter your website URL (e.g., example.com)"
               value={url}
@@ -55,7 +55,7 @@ export function UrlInputSection({
             <button
               onClick={onSubmit}
               disabled={loading || analyzing || !url || urlValid === false}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] hover:bg-[#4a4542] disabled:bg-gray-300 disabled:hover:bg-gray-300"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 w-10 rounded-lg flex items-center justify-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#EE952F] text-[#000589] hover:bg-[#000589] hover:text-white active:bg-[#000589] active:text-white disabled:bg-gray-300 disabled:hover:bg-gray-300"
               aria-label="Analyze website"
             >
               {loading ? (

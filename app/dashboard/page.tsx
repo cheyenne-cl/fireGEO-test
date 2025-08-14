@@ -75,19 +75,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50  pt-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
         {/* Welcome Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="bg-white rounded-lg shadow p-6 mb-8 rounded-xl border-2 border-solid border-[#000589]">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
               <User className="h-6 w-6 text-orange-600" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Welcome back!</h2>
-              <p className="text-gray-600">Here's what's happening with your brand monitoring</p>
+              <p className="text-gray-600">Here&apos;s what&apos;s happening with your brand monitoring</p>
             </div>
           </div>
           
@@ -111,7 +111,7 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 rounded-xl border-2 border-solid border-[#000589]">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-blue-600" />
@@ -125,7 +125,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 rounded-xl border-2 border-solid border-[#000589]">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Target className="h-6 w-6 text-green-600" />
@@ -139,7 +139,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 rounded-xl border-2 border-solid border-[#000589]">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-purple-600" />
@@ -153,7 +153,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 rounded-xl border-2 border-solid border-[#000589]">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Activity className="h-6 w-6 text-orange-600" />
@@ -174,12 +174,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 rounded-xl border-2 border-solid border-[#000589]">
           <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <Button 
+              variant="orange"
               onClick={() => router.push('/brand-monitor')}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              className="w-full"
             >
               <Target className="h-4 w-4 mr-2" />
               Start Brand Analysis

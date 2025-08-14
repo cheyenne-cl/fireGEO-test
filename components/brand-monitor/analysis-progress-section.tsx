@@ -5,6 +5,7 @@ import { Loader2, Plus, Trash2, CheckIcon } from 'lucide-react';
 import { Company, AnalysisStage } from '@/lib/types';
 import { IdentifiedCompetitor, PromptCompletionStatus } from '@/lib/brand-monitor-reducer';
 import { getEnabledProviders } from '@/lib/provider-config';
+import { Button } from '../ui/button';
 
 interface AnalysisProgressSectionProps {
   company: Company;
@@ -247,22 +248,24 @@ export function AnalysisProgressSection({
 
               {/* Add Prompt Button */}
               <div className="flex justify-end mb-4">
-                <button
+                <Button
+                  variant="outline"
                   onClick={onAddPromptClick}
                   disabled={analyzing}
-                  className="h-9 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] text-[#fff] hover:bg-[#4a4542] disabled:bg-[#8c8885] disabled:hover:bg-[#8c8885] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#171310,_0px_1px_3px_0px_rgba(58,_33,_8,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#171310,_0px_1px_2px_0px_rgba(58,_33,_8,_30%)] disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100 px-4 py-1 gap-1"
+                  className="h-9 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[#8c8885] disabled:hover:bg-[#8c8885](58,_33,_8,_58%)] disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100 px-4 py-1 gap-1"
                 >
                   <Plus className="h-4 w-4" />
                   Add Prompt
-                </button>
+                </Button>
               </div>
 
               {/* Start Analysis Button */}
               <div className="flex justify-center pt-4">
-                <button
+                <Button
+                  variant="orange"
                   onClick={onStartAnalysis}
                   disabled={analyzing}
-                  className="h-10 px-6 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-orange-500 text-white hover:bg-orange-600 [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#c2410c,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(234,_88,_12,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#c2410c,_0px_1px_3px_0px_rgba(234,_88,_12,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#c2410c,_0px_1px_2px_0px_rgba(234,_88,_12,_30%)] disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100"
+                  className="h-10 px-6 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100"
                 >
                   {analyzing ? (
                     <>
@@ -272,7 +275,7 @@ export function AnalysisProgressSection({
                   ) : (
                     'Start Analysis'
                   )}
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>

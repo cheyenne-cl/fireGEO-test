@@ -72,6 +72,29 @@ export function TargetingOptions({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Company Size */}
+        {/* Selected Options Summary */}
+        {(selectedSize || selectedRegion || selectedSegment) && (
+          <div className="pt-4 border-t">
+            <h4 className="font-medium mb-2">Selected Targeting:</h4>
+            <div className="flex flex-wrap gap-2">
+              {selectedSize && (
+                <Badge variant="custom">
+                  Size: {COMPANY_SIZES.find(s => s.value === selectedSize)?.label}
+                </Badge>
+              )}
+              {selectedRegion && (
+                <Badge variant="custom">
+                  Region: {GEOGRAPHIC_REGIONS.find(r => r.value === selectedRegion)?.label}
+                </Badge>
+              )}
+              {selectedSegment && (
+                <Badge variant="custom">
+                  Market: {MARKET_SEGMENTS.find(m => m.value === selectedSegment)?.label}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
         <div>
           <h4 className="font-medium mb-3 flex items-center gap-2">
             <Building2 className="w-4 h-4" />
@@ -83,15 +106,15 @@ export function TargetingOptions({
                 key={size.value}
                 variant={selectedSize === size.value ? "default" : "outline"}
                 size="sm"
-                className="justify-start h-auto p-3"
+                className="justify-start h-auto px-8 py-4"
                 onClick={() => setSelectedSize(selectedSize === size.value ? "" : size.value)}
               >
                 <div className="text-left">
                   <div className="flex items-center gap-2">
-                    <span>{size.icon}</span>
+                    {/* <span>{size.icon}</span> */}
                     <span className="font-medium">{size.label}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className={`text-xs mt-1 ${selectedSize === size.value ? 'text-white' : 'text-muted-foreground'}`}>
                     {size.description}
                   </div>
                 </div>
@@ -112,13 +135,13 @@ export function TargetingOptions({
                 key={region.value}
                 variant={selectedRegion === region.value ? "default" : "outline"}
                 size="sm"
-                className="justify-start h-auto p-3"
+                className="justify-start h-auto px-8 py-4"
                 onClick={() => setSelectedRegion(selectedRegion === region.value ? "" : region.value)}
               >
                 <div className="text-left">
                   <div className="flex items-center gap-2">
-                    <span>{region.icon}</span>
-                    <span className="font-medium">{region.label}</span>
+                    {/* <span>{region.icon}</span> */}
+                    <span className="font-medium active:text-white">{region.label}</span>
                   </div>
                 </div>
               </Button>
@@ -138,15 +161,15 @@ export function TargetingOptions({
                 key={segment.value}
                 variant={selectedSegment === segment.value ? "default" : "outline"}
                 size="sm"
-                className="justify-start h-auto p-3"
+                className="justify-start h-auto px-8 py-4"
                 onClick={() => setSelectedSegment(selectedSegment === segment.value ? "" : segment.value)}
               >
                 <div className="text-left">
                   <div className="flex items-center gap-2">
-                    <span>{segment.icon}</span>
-                    <span className="font-medium">{segment.label}</span>
+                    {/* <span>{segment.icon}</span> */}
+                    <span className="font-medium ">{segment.label}</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1">
+                  <div className={`text-xs mt-1 ${selectedSegment === segment.value ? 'text-white' : 'text-muted-foreground'}`}>
                     {segment.description}
                   </div>
                 </div>
@@ -155,29 +178,6 @@ export function TargetingOptions({
           </div>
         </div>
 
-        {/* Selected Options Summary */}
-        {(selectedSize || selectedRegion || selectedSegment) && (
-          <div className="pt-4 border-t">
-            <h4 className="font-medium mb-2">Selected Targeting:</h4>
-            <div className="flex flex-wrap gap-2">
-              {selectedSize && (
-                <Badge variant="secondary">
-                  Size: {COMPANY_SIZES.find(s => s.value === selectedSize)?.label}
-                </Badge>
-              )}
-              {selectedRegion && (
-                <Badge variant="secondary">
-                  Region: {GEOGRAPHIC_REGIONS.find(r => r.value === selectedRegion)?.label}
-                </Badge>
-              )}
-              {selectedSegment && (
-                <Badge variant="secondary">
-                  Market: {MARKET_SEGMENTS.find(m => m.value === selectedSegment)?.label}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

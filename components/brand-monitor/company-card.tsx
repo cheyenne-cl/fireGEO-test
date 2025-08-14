@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, Building2, ExternalLink, Plus, Trash2 } from 'lucide-react';
 import { Company } from '@/lib/types';
 import Image from 'next/image';
+import { Button } from '../ui/button';
 
 interface CompanyCardProps {
   company: Company;
@@ -56,7 +57,7 @@ export function CompanyCard({
   const validFaviconUrl = isValidUrl(company.favicon) ? company.favicon : null;
 
   return (
-    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 overflow-hidden transition-all hover:shadow-lg">
+    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border-2 border-solid border-[#000589] py-6 shadow-sm overflow-hidden transition-all hover:shadow-lg">
       <div className="flex">
         {/* Left side - OG Image */}
         <div className="relative w-80 h-48 ml-4 overflow-hidden">
@@ -118,10 +119,11 @@ export function CompanyCard({
                 </span>
               </div>
             </div>
-            <button 
+            <Button 
+              variant="orange"
               onClick={onAnalyze} 
               disabled={analyzing}
-              className="h-9 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] text-[#fff] hover:bg-[#4a4542] disabled:bg-[#8c8885] disabled:hover:bg-[#8c8885] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#171310,_0px_1px_3px_0px_rgba(58,_33,_8,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#171310,_0px_1px_2px_0px_rgba(58,_33,_8,_30%)] disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100 px-4 py-1"
+              className="h-9 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] text-[#fff] hover:bg-[#4a4542] disabled:bg-[#8c8885] disabled:hover:bg-[#8c8885]"
             >
               {analyzing ? (
                 <>
@@ -131,7 +133,7 @@ export function CompanyCard({
               ) : (
                 'Identify Competitors'
               )}
-            </button>
+            </Button>
           </div>
 
           <p className="text-sm text-gray-600 mb-4 line-clamp-2">
@@ -161,12 +163,12 @@ export function CompanyCard({
       
       {/* Competitors Section */}
       {showCompetitors && identifiedCompetitors.length > 0 && (
-        <div className="border-t border-gray-200">
-          <div className="px-8 py-6">
-            <div className="mb-4">
+        <div>
+          <div className="px-8 py-4">
+            <div className="mb-4 border-t border-gray-200">
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Competitors</h3>
-                <p className="text-sm text-gray-500">We'll compare {company.name} against these {identifiedCompetitors.length} competitors</p>
+                <h3 className="text-sm font-medium text-gray-900 pt-4">Competitors</h3>
+                <p className="text-sm text-gray-500">We&apos;ll compare {company.name} against these {identifiedCompetitors.length} competitors</p>
               </div>
             </div>
               
@@ -246,24 +248,26 @@ export function CompanyCard({
               {/* Actions */}
               <div className="flex items-center gap-4 mt-6 pt-6 border-t">
                 {onAddCompetitor && (
-                  <button
+                  <Button
+                    variant="default"
                     onClick={onAddCompetitor}
-                    className="h-10 px-4 rounded-[10px] text-sm font-medium flex items-center gap-1 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#c2410c,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(234,_88,_12,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#c2410c,_0px_1px_3px_0px_rgba(234,_88,_12,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#c2410c,_0px_1px_2px_0px_rgba(234,_88,_12,_30%)]"
+                    className="h-10 px-4 rounded-[10px] text-sm font-medium flex items-center gap-1"
                   >
                     <Plus className="w-4 h-4" />
                     Add Competitor
-                  </button>
+                  </Button>
                 )}
                 
                 <div className="flex-1" />
                 
                 {onContinueToAnalysis && (
-                  <button
+                  <Button
+                    variant="orange"
                     onClick={onContinueToAnalysis}
-                    className="h-10 px-6 rounded-[10px] text-sm font-medium flex items-center transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 bg-[#36322F] text-[#fff] hover:bg-[#4a4542] disabled:bg-[#8c8885] disabled:hover:bg-[#8c8885] [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#171310,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(58,_33,_8,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#171310,_0px_1px_3px_0px_rgba(58,_33,_8,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#171310,_0px_1px_2px_0px_rgba(58,_33,_8,_30%)] disabled:shadow-none disabled:hover:translate-y-0 disabled:hover:scale-100"
+                    className="h-10 px-6 rounded-[10px] text-sm font-medium flex items-center"
                   >
                     Continue to Analysis
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

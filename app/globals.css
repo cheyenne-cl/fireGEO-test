@@ -123,49 +123,53 @@
 
 /* Firecrawl button styles */
 .btn-firecrawl-default {
-  background-color: #18181b;
+  background-color: #000589;
   color: white;
-  box-shadow: inset 0px -2px 0px 0px #18181b, 0px 1px 6px 0px rgba(24, 24, 27, 58%);
+  border-radius: 50px;
 }
 .btn-firecrawl-default:hover {
-  background-color: #27272a;
+  background-color: #000589;
   transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0px -1px 0px 0px #18181b, 0px 1px 3px 0px rgba(24, 24, 27, 40%);
+  border-radius: 50px;
 }
 .btn-firecrawl-default:active {
   transform: translateY(2px) scale(0.97);
-  box-shadow: inset 0px 1px 1px 0px #18181b, 0px 1px 2px 0px rgba(24, 24, 27, 30%);
+  border-radius: 50px;
 }
 
 .btn-firecrawl-orange {
-  background-color: #f97316;
+  background-color: #EE952F;
   color: white;
-  box-shadow: inset 0px -2px 0px 0px #c2410c, 0px 1px 6px 0px rgba(234, 88, 12, 58%);
+  border-radius: 50px;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
 }
 .btn-firecrawl-orange:hover {
-  background-color: #ea580c;
+  background-color: white;
+  color: #000589;
+  border: 2px solid #000589;
   transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0px -1px 0px 0px #c2410c, 0px 1px 3px 0px rgba(234, 88, 12, 40%);
+  border-radius: 50px;
 }
 .btn-firecrawl-orange:active {
   transform: translateY(2px) scale(0.97);
-  box-shadow: inset 0px 1px 1px 0px #c2410c, 0px 1px 2px 0px rgba(234, 88, 12, 30%);
+  border-radius: 50px;
 }
 
 .btn-firecrawl-outline {
   background-color: transparent;
-  color: #18181b;
-  border: 1px solid #d4d4d8;
-  box-shadow: inset 0px -2px 0px 0px #e4e4e7, 0px 1px 6px 0px rgba(228, 228, 231, 58%);
+  color: #000589;
+  border: 1px solid #000589;
+  border-radius: 50px;
 }
 .btn-firecrawl-outline:hover {
   background-color: #fafafa;
   transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0px -1px 0px 0px #e4e4e7, 0px 1px 3px 0px rgba(228, 228, 231, 40%);
+  border-radius: 50px;
 }
 .btn-firecrawl-outline:active {
   transform: translateY(2px) scale(0.97);
-  box-shadow: inset 0px 1px 1px 0px #e4e4e7, 0px 1px 2px 0px rgba(228, 228, 231, 30%);
+  border-radius: 50px;
 }
 
 /* Grid background pattern */

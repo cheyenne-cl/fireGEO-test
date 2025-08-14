@@ -181,33 +181,16 @@ export async function performAnalysis({
     hasGoogle: !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     hasPerplexity: !!process.env.PERPLEXITY_API_KEY,
   });
-  console.log("Raw environment variables:", {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "SET" : "NOT SET",
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? "SET" : "NOT SET",
-    GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY
-      ? "SET"
-      : "NOT SET",
-    PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY ? "SET" : "NOT SET",
-  });
-  console.log("Web search enabled:", useWebSearch);
-  console.log("Number of prompts:", analysisPrompts.length);
-  console.log("Number of available providers:", availableProviders.length);
-
   const totalAnalyses = analysisPrompts.length * availableProviders.length;
   let completedAnalyses = 0;
-  console.log("Total analyses to perform:", totalAnalyses);
 
   // Check if we should use mock mode (no API keys configured)
   const useMockMode =
     process.env.USE_MOCK_MODE === "true" || availableProviders.length === 0;
 
-  console.log("Mock mode enabled:", useMockMode);
-  console.log("Available providers count:", availableProviders.length);
-
   // If no providers are available and mock mode is not explicitly enabled,
   // create a mock provider to ensure analysis can proceed
   if (availableProviders.length === 0 && process.env.USE_MOCK_MODE !== "true") {
-    console.log("No providers available, creating mock provider for fallback");
     availableProviders.push({
       name: "Mock",
       model: "mock",
