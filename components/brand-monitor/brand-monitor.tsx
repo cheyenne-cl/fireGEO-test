@@ -20,6 +20,7 @@ import {
   brandMonitorReducer,
   initialBrandMonitorState,
   IdentifiedCompetitor,
+  Analysis,
 } from "@/lib/brand-monitor-reducer";
 import {
   validateUrl,
@@ -52,12 +53,12 @@ import { useSSEHandler } from "./hooks/use-sse-handler";
 
 interface BrandMonitorProps {
   selectedAnalysis?: {
-    analysisData: any;
+    analysisData: Record<string, unknown>;
     companyName?: string;
     url?: string;
     industry?: string;
   } | null;
-  onSaveAnalysis?: (analysis: any) => void;
+  onSaveAnalysis?: (analysis: unknown) => void;
 }
 
 export function BrandMonitor({
@@ -69,8 +70,6 @@ export function BrandMonitor({
     initialBrandMonitorState
   );
   const saveAnalysis = useSaveBrandAnalysis();
-  const [isLoadingExistingAnalysis, setIsLoadingExistingAnalysis] =
-    useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const hasSavedRef = useRef(false);
   const [targetingOptions, setTargetingOptions] = useState<{
@@ -136,7 +135,6 @@ export function BrandMonitor({
     customPrompts,
     removedDefaultPrompts,
     identifiedCompetitors,
-    availableProviders,
     analysisProgress,
     promptCompletionStatus,
     analyzingPrompts,
@@ -156,11 +154,10 @@ export function BrandMonitor({
   // Load selected analysis if provided or reset when null
   useEffect(() => {
     if (selectedAnalysis && selectedAnalysis.analysisData) {
-      setIsLoadingExistingAnalysis(true);
       // Restore the analysis state from saved data
       dispatch({
         type: "SET_ANALYSIS",
-        payload: selectedAnalysis.analysisData,
+        payload: selectedAnalysis.analysisData as unknown as Analysis,
       });
       if (selectedAnalysis.companyName) {
         dispatch({
@@ -172,13 +169,10 @@ export function BrandMonitor({
           } as Company,
         });
       }
-      // Reset the flag after a short delay to ensure the save effect doesn't trigger
-      setTimeout(() => setIsLoadingExistingAnalysis(false), 100);
     } else if (selectedAnalysis === null) {
       // Reset state when explicitly set to null (New Analysis clicked)
       dispatch({ type: "RESET_STATE" });
       hasSavedRef.current = false;
-      setIsLoadingExistingAnalysis(false);
     }
   }, [selectedAnalysis]);
 
@@ -270,13 +264,14 @@ export function BrandMonitor({
           console.log("Showing company card");
         }, 50);
       }, 500);
-    } catch (error: any) {
+    } catch (error) {
       let errorMessage = "Failed to extract company information";
       if (error instanceof ClientApiError) {
         errorMessage = error.getUserMessage();
-      } else if (error.message) {
+      } else if (error instanceof Error && error.message) {
         errorMessage = `Failed to extract company information: ${error.message}`;
       }
+      // Remove duplicate errorMessage assignment and ensure error is typed
       dispatch({ type: "SET_ERROR", payload: errorMessage });
       console.error("HandleScrape error:", error);
     } finally {
@@ -342,8 +337,8 @@ export function BrandMonitor({
       console.log("AI-identified competitors:", aiCompetitors);
 
       // Convert AI competitors to IdentifiedCompetitor format with URLs
-      const competitors = aiCompetitors
-        .map((name) => {
+      const competitors = (aiCompetitors as string[])
+        .map((name: string) => {
           const url = assignUrlToCompetitor(name);
           console.log(`Assigned URL for "${name}": ${url}`);
           return { name, url };
@@ -497,16 +492,21 @@ export function BrandMonitor({
 
       console.log(
         "Starting analysis with providers:",
-        availableProviders.map((p) => p.name)
+        availableProviders.map((p: { name: string }) => p.name)
       );
 
       // Initialize prompt completion status
-      const initialStatus: any = {};
-      const expectedProviders = availableProviders.map((p) => p.name);
+      const initialStatus: Record<
+        string,
+        Record<string, "pending" | "completed" | "failed">
+      > = {};
+      const expectedProviders: string[] = availableProviders.map(
+        (p: { name: string }) => p.name
+      );
 
-      normalizedPrompts.forEach((prompt) => {
+      normalizedPrompts.forEach((prompt: string) => {
         initialStatus[prompt] = {};
-        expectedProviders.forEach((provider) => {
+        expectedProviders.forEach((provider: string) => {
           initialStatus[prompt][provider] = "pending";
         });
       });
@@ -553,7 +553,6 @@ export function BrandMonitor({
   const handleRestart = useCallback(() => {
     dispatch({ type: "RESET_STATE" });
     hasSavedRef.current = false;
-    setIsLoadingExistingAnalysis(false);
   }, []);
 
   const handleDownloadReport = useCallback(async () => {
