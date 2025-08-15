@@ -20,11 +20,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  useEffect(() => {
-    if (!isPending && !session) {
-      router.push('/login');
-    }
-  }, [session, isPending, router]);
+
 
   useEffect(() => {
     if (session) {
@@ -63,7 +59,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (isPending || !session) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -72,6 +68,12 @@ export default function DashboardPage() {
         </div>
       </div>
     );
+  }
+
+  if (!session) {
+    // Redirect to login if no session
+    router.push('/login');
+    return null;
   }
 
   return (
