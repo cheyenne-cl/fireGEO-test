@@ -909,7 +909,24 @@ export async function analyzeCompetitors(
         : 99; // High number for companies not ranked
 
     const sentimentScore = calculateSentimentScore(data.sentiments);
-    const visibilityScore = (data.mentions / totalResponses) * 100;
+    let visibilityScore = (data.mentions / totalResponses) * 100;
+
+    // Apply discount factor for self-analysis to prevent false 100% scores
+    if (name === company.name) {
+      // For self-analysis, apply a discount factor based on how many other companies were mentioned
+      const otherMentions = Array.from(competitorMap.entries())
+        .filter(([otherName]) => otherName !== company.name)
+        .reduce((sum, [, otherData]) => sum + otherData.mentions, 0);
+      
+      // If other companies were mentioned, apply a discount
+      if (otherMentions > 0) {
+        const discountFactor = Math.min(0.8, otherMentions / totalResponses);
+        visibilityScore = visibilityScore * (1 - discountFactor);
+      } else {
+        // If no other companies mentioned, apply a significant discount
+        visibilityScore = visibilityScore * 0.6;
+      }
+    }
 
     competitors.push({
       name,
@@ -1119,8 +1136,25 @@ export async function analyzeCompetitorsByProvider(
           ? data.positions.reduce((a, b) => a + b, 0) / data.positions.length
           : 99;
 
-      const visibilityScore =
+      let visibilityScore =
         totalResponses > 0 ? (data.mentions / totalResponses) * 100 : 0;
+
+      // Apply discount factor for self-analysis to prevent false 100% scores
+      if (name === company.name) {
+        // For self-analysis, apply a discount factor based on how many other companies were mentioned
+        const otherMentions = Array.from(competitorMap.entries())
+          .filter(([otherName]) => otherName !== company.name)
+          .reduce((sum, [, otherData]) => sum + otherData.mentions, 0);
+        
+        // If other companies were mentioned, apply a discount
+        if (otherMentions > 0) {
+          const discountFactor = Math.min(0.8, otherMentions / totalResponses);
+          visibilityScore = visibilityScore * (1 - discountFactor);
+        } else {
+          // If no other companies mentioned, apply a significant discount
+          visibilityScore = visibilityScore * 0.6;
+        }
+      }
 
       competitors.push({
         name,
