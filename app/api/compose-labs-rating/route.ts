@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       visibilityScore = analysisData.scores.visibilityScore || 0;
       // Convert sentiment score from 0-100 scale to 0-10 scale
       sentimentScore = analysisData.scores.sentimentScore
-        ? Math.round((analysisData.scores.sentimentScore / 10) * 10) / 10
+        ? Math.round((analysisData.scores.sentimentScore / 10))
         : 0;
       mentionsCount = 0; // We'll calculate this from competitors if available
 
@@ -112,8 +112,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Calculate overall score as average of sentiment and visibility
-      overallScore =
-        Math.round(((sentimentScore + visibilityScore) / 2) * 10) / 10;
+      overallScore = Math.round((sentimentScore + visibilityScore) / 2);
     } else if (analysisData && analysisData.providerResults) {
       // Fallback to the old provider results format
       const providers = Object.keys(analysisData.providerResults);
@@ -137,14 +136,17 @@ export async function GET(request: NextRequest) {
       });
 
       if (providerCount > 0) {
-        sentimentScore = Math.round((totalSentiment / providerCount) * 10) / 10;
-        visibilityScore =
-          Math.round((totalVisibility / providerCount) * 10) / 10;
+        sentimentScore = Math.round(totalSentiment / providerCount);
+        visibilityScore = Math.round(totalVisibility / providerCount);
         mentionsCount = totalMentions;
-        overallScore =
-          Math.round(((sentimentScore + visibilityScore) / 2) * 10) / 10;
+        overallScore = Math.round((sentimentScore + visibilityScore) / 2);
       }
     }
+
+    // Ensure scores are within 0-10 range
+    overallScore = Math.max(0, Math.min(10, overallScore));
+    visibilityScore = Math.max(0, Math.min(10, visibilityScore));
+    sentimentScore = Math.max(0, Math.min(10, sentimentScore));
 
     // Determine trend (for now, we'll use a simple calculation)
     // In a real implementation, you might compare with previous analyses
