@@ -544,30 +544,30 @@ export async function generatePromptsForCompany(
   // Generate contextually relevant prompts
   const contextualTemplates = {
     ranking: [
-      `Compare ${competitors.slice(0, 3).join(", ")} and ${brandName} for ${productContext}`,
-      `Rank ${competitors.slice(0, 4).join(", ")} by their ${productContext} capabilities`,
-      `Which is better for ${productContext}: ${competitors.slice(0, 2).join(" vs ")}?`,
-      `Top ${categoryContext} including ${competitors.slice(0, 3).join(", ")}`,
+      `Compare ${competitors.join(", ")} and ${brandName} for ${productContext}`,
+      `Rank ${competitors.join(", ")} and ${brandName} by their ${productContext} capabilities`,
+      `Which is better for ${productContext}: ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")} vs ${brandName}?`,
+      `Top ${categoryContext} including ${competitors.join(", ")} and ${brandName}`,
     ],
     comparison: [
-      `${brandName} vs ${competitors.slice(0, 2).join(" vs ")} for ${productContext}`,
-      `How does ${brandName} compare to ${competitors.slice(0, 3).join(", ")}?`,
+      `${brandName} vs ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")} for ${productContext}`,
+      `How does ${brandName} compare to ${competitors.join(", ")}?`,
       competitors[0] && mainProducts[0]
         ? `${competitors[0]} or ${brandName} which has better ${mainProducts[0]}`
-        : `${brandName} compared to ${competitors.slice(0, 2).join(", ")}`,
+        : `${brandName} compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
     ],
     alternatives: [
-      `Alternatives to ${brandName}: ${competitors.slice(0, 3).join(", ")}`,
-      `${categoryContext} similar to ${brandName}: ${competitors.slice(0, 3).join(", ")}`,
-      `Competitors of ${brandName} in ${productContext.split(" ")[0]} market: ${competitors.slice(0, 3).join(", ")}`,
+      `Alternatives to ${brandName}: ${competitors.join(", ")}`,
+      `${categoryContext} similar to ${brandName}: ${competitors.join(", ")}`,
+      `Competitors of ${brandName} in ${productContext.split(" ")[0]} market: ${competitors.join(", ")}`,
     ],
     recommendations: [
       mainProducts.length > 0
-        ? `Is ${brandName} ${mainProducts[0]} worth buying compared to ${competitors.slice(0, 2).join(", ")}?`
-        : `Is ${brandName} worth it for ${productContext} compared to ${competitors.slice(0, 2).join(", ")}?`,
-      `${brandName} ${productContext} reviews vs ${competitors.slice(0, 2).join(", ")}`,
-      `Should I buy ${brandName} or ${competitors.slice(0, 2).join(", ")} for ${productContext}?`,
-      `Best ${productContext} among ${brandName} and ${competitors.slice(0, 3).join(", ")}`,
+        ? `Is ${brandName} ${mainProducts[0]} worth buying compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`
+        : `Is ${brandName} worth it for ${productContext} compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`,
+      `${brandName} ${productContext} reviews vs ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
+      `Should I buy ${brandName} or ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")} for ${productContext}?`,
+      `Best ${productContext} among ${brandName} and ${competitors.join(", ")}`,
     ],
   };
 

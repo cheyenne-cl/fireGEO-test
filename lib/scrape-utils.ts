@@ -44,16 +44,19 @@ export async function scrapeCompanyInfo(
   // Use Firecrawl if available
   if (firecrawl) {
     try {
+      console.log("Attempting to scrape URL:", normalizedUrl);
       const response = await firecrawl.scrapeUrl(normalizedUrl, {
         formats: ["markdown"],
         maxAge: cacheAge,
       });
       if (!response.success) {
-        throw new Error(response.error);
+        throw new Error(response.error || "Firecrawl scraping failed");
       }
       html = response.markdown;
       metadata = response.metadata;
+      console.log("Successfully scraped URL, content length:", html.length);
     } catch (error: any) {
+      console.error("Firecrawl scraping error:", error);
       // If Firecrawl fails, throw a meaningful error
       throw new Error(
         `Failed to scrape website: ${error.message}. Please check the URL and try again.`
@@ -68,6 +71,8 @@ export async function scrapeCompanyInfo(
 
   // Use AI to extract structured information - use first available provider
   const configuredProviders = getConfiguredProviders();
+  console.log("Configured providers for scraping:", configuredProviders.map(p => p.name));
+  
   if (configuredProviders.length === 0) {
     throw new Error(
       "No AI providers configured. Please set up at least one AI API key (OpenAI, Anthropic, Google, or Perplexity) to analyze website content."

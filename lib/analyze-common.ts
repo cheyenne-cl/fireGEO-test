@@ -129,8 +129,8 @@ export async function performAnalysis({
     }));
   } else {
     const prompts = await generatePromptsForCompany(company, competitors);
-    // Note: Changed from 8 to 4 to match UI - this should be configurable
-    analysisPrompts = prompts.slice(0, 4);
+    // Use all generated prompts to ensure comprehensive analysis including brand
+    analysisPrompts = prompts;
   }
 
   // Send prompt generated events

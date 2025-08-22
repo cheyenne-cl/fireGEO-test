@@ -26,7 +26,7 @@ export function VisibilityScoreTab({
   return (
     <div className="flex flex-col h-full">
       {/* Main Content Card */}
-      <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 h-full flex flex-col">
+      <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm rounded-xl border-2 border-solid border-[#000589] h-full flex flex-col">
         <CardHeader className="border-b">
           <div className="flex justify-between items-center">
             <div>

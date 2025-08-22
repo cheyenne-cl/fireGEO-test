@@ -241,7 +241,11 @@ export function BrandMonitor({
           throw new Error(errorData.error || "Failed to scrape");
         } catch (e) {
           if (e instanceof ClientApiError) throw e;
-          throw new Error("Failed to scrape");
+          // If we can't parse the error response, provide a more helpful message
+          const statusText = response.statusText || `HTTP ${response.status}`;
+          throw new Error(
+            `Failed to scrape: ${statusText}. Please check your configuration and try again.`
+          );
         }
       }
 
@@ -344,7 +348,6 @@ export function BrandMonitor({
           return { name, url };
         })
         .slice(0, 9); // Limit to 9 competitors max
-
       console.log("Final competitors with URLs:", competitors);
       console.log(
         "Competitor names for prompts:",
@@ -408,18 +411,43 @@ export function BrandMonitor({
     dispatch({ type: "SET_PREPARING_ANALYSIS", payload: false });
   }, [company]);
 
-  const handleProceedToPrompts = useCallback(() => {
+  const handleProceedToPrompts = useCallback(async () => {
     // Add a fade-out class to the current view
     const currentView = document.querySelector(".animate-panel-in");
     if (currentView) {
       currentView.classList.add("opacity-0");
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
       dispatch({ type: "SET_SHOW_COMPETITORS", payload: false });
       dispatch({ type: "SET_SHOW_PROMPTS_LIST", payload: true });
+
+      // Generate prompts for display
+      if (company && identifiedCompetitors.length > 0) {
+        try {
+          const competitorNames = identifiedCompetitors.map((c) => c.name);
+          const response = await fetch("/api/brand-monitor/generate-prompts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              company,
+              competitors: competitorNames,
+            }),
+          });
+
+          if (response.ok) {
+            const { prompts } = await response.json();
+            const promptStrings = prompts.map(
+              (p: { prompt: string }) => p.prompt
+            );
+            dispatch({ type: "SET_ANALYZING_PROMPTS", payload: promptStrings });
+          }
+        } catch (error) {
+          console.error("Failed to generate prompts:", error);
+        }
+      }
     }, 300);
-  }, []);
+  }, [company, identifiedCompetitors]);
 
   const handleAnalyze = useCallback(async () => {
     if (!company) return;
@@ -427,25 +455,12 @@ export function BrandMonitor({
     // Reset saved flag for new analysis
     hasSavedRef.current = false;
 
-    // Collect all prompts (default + custom)
-    const serviceType = detectServiceType(company);
-    // Create dynamic prompts based on identified competitors
-    const competitorNames = identifiedCompetitors.map((c) => c.name);
-    const topCompetitors = competitorNames.slice(0, 4); // Use top 4 competitors
-    const comparisonCompetitors = competitorNames.slice(0, 3); // Use top 3 for comparisons
+    // Let the backend generate proper prompts with all competitors
+    // We'll use custom prompts if provided, otherwise the backend will generate them
+    const promptsToSend = customPrompts.length > 0 ? customPrompts : [];
 
-    const defaultPrompts = [
-      `Compare ${topCompetitors.join(", ")} for ${serviceType} capabilities`,
-      `Rank ${topCompetitors.join(", ")} by their ${serviceType} features`,
-      `Which is better for ${serviceType}: ${comparisonCompetitors.join(" vs ")}?`,
-      `${serviceType} comparison: ${topCompetitors.join(" vs ")}`,
-    ].filter((_, index) => !removedDefaultPrompts.includes(index));
-
-    const allPrompts = [...defaultPrompts, ...customPrompts];
-
-    // Store the prompts for UI display - make sure they're normalized
-    const normalizedPrompts = allPrompts.map((p) => p.trim());
-    dispatch({ type: "SET_ANALYZING_PROMPTS", payload: normalizedPrompts });
+    // Keep the existing prompts for UI display during analysis
+    // The prompts were already generated when navigating to the prompts page
 
     dispatch({ type: "SET_ANALYZING", payload: true });
     dispatch({
@@ -495,24 +510,10 @@ export function BrandMonitor({
         availableProviders.map((p: { name: string }) => p.name)
       );
 
-      // Initialize prompt completion status
-      const initialStatus: Record<
-        string,
-        Record<string, "pending" | "completed" | "failed">
-      > = {};
-      const expectedProviders: string[] = availableProviders.map(
-        (p: { name: string }) => p.name
-      );
-
-      normalizedPrompts.forEach((prompt: string) => {
-        initialStatus[prompt] = {};
-        expectedProviders.forEach((provider: string) => {
-          initialStatus[prompt][provider] = "pending";
-        });
-      });
+      // Initialize prompt completion status - will be updated when real prompts are received
       dispatch({
         type: "SET_PROMPT_COMPLETION_STATUS",
-        payload: initialStatus,
+        payload: {},
       });
 
       try {
@@ -525,7 +526,7 @@ export function BrandMonitor({
           body: JSON.stringify({
             analysisId,
             company,
-            prompts: normalizedPrompts,
+            prompts: promptsToSend,
             competitors: identifiedCompetitors,
           }),
         });
@@ -663,7 +664,6 @@ export function BrandMonitor({
       {showPromptsList && company && !analysis && (
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
           <AnalysisProgressSection
-            company={company}
             analyzing={analyzing}
             identifiedCompetitors={identifiedCompetitors}
             scrapingCompetitors={scrapingCompetitors}
@@ -672,15 +672,6 @@ export function BrandMonitor({
             customPrompts={customPrompts}
             removedDefaultPrompts={removedDefaultPrompts}
             promptCompletionStatus={promptCompletionStatus}
-            onRemoveDefaultPrompt={(index) =>
-              dispatch({ type: "REMOVE_DEFAULT_PROMPT", payload: index })
-            }
-            onRemoveCustomPrompt={(prompt) => {
-              dispatch({
-                type: "SET_CUSTOM_PROMPTS",
-                payload: customPrompts.filter((p) => p !== prompt),
-              });
-            }}
             onAddPromptClick={() => {
               dispatch({
                 type: "TOGGLE_MODAL",
@@ -690,6 +681,7 @@ export function BrandMonitor({
             }}
             onStartAnalysis={handleAnalyze}
             detectServiceType={detectServiceType}
+            dispatch={dispatch}
           />
         </div>
       )}
@@ -722,7 +714,7 @@ export function BrandMonitor({
                   )}
 
                   {activeResultsTab === "matrix" && (
-                    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 h-full flex flex-col">
+                    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm rounded-xl border-2 border-solid border-[#000589] h-full flex flex-col">
                       <CardHeader className="border-b">
                         <div className="flex justify-between items-center">
                           <div>
@@ -766,7 +758,10 @@ export function BrandMonitor({
 
                   {activeResultsTab === "rankings" &&
                     analysis.providerRankings && (
-                      <div id="provider-rankings" className="h-full">
+                      <div
+                        id="provider-rankings"
+                        className="h-full rounded-xl border-2 border-solid border-[#000589]"
+                      >
                         <ProviderRankingsTabs
                           providerRankings={analysis.providerRankings}
                           brandName={company?.name || "Your Brand"}
@@ -781,7 +776,7 @@ export function BrandMonitor({
                     )}
 
                   {activeResultsTab === "prompts" && analysis.prompts && (
-                    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm border-gray-200 h-full flex flex-col w-full overflow-hidden">
+                    <Card className="p-2 bg-card text-card-foreground gap-6 rounded-xl border py-6 shadow-sm rounded-xl border-2 border-solid border-[#000589] h-full flex flex-col w-full overflow-hidden">
                       <CardHeader className="border-b">
                         <div className="flex justify-between items-center">
                           <div>

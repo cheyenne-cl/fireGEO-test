@@ -57,6 +57,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ company });
   } catch (error) {
+    console.error("Scrape API error details:", {
+      error: error,
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : "No stack trace",
+      env: {
+        hasFirecrawl: !!process.env.FIRECRAWL_API_KEY,
+        hasOpenAI: !!process.env.OPENAI_API_KEY,
+        hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
+        hasGoogle: !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+        hasPerplexity: !!process.env.PERPLEXITY_API_KEY,
+        hasDatabase: !!process.env.DATABASE_URL,
+      }
+    });
     return handleApiError(error);
   }
 }

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronsDown, ChevronsUp } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import { BrandPrompt, AIResponse } from "@/lib/types";
 import { HighlightedResponse } from "./highlighted-response";
 
@@ -20,17 +20,21 @@ const getProviderIcon = (provider: string) => {
   switch (provider) {
     case "OpenAI":
       return (
-        <img
+        <Image
           src="https://cdn.brandfetch.io/idR3duQxYl/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
           alt="OpenAI"
+          width={24}
+          height={24}
           className="w-6 h-6"
         />
       );
     case "Anthropic":
       return (
-        <img
+        <Image
           src="https://cdn.brandfetch.io/idmJWF3N06/theme/dark/symbol.svg"
           alt="Anthropic"
+          width={24}
+          height={24}
           className="w-6 h-6"
         />
       );
@@ -59,9 +63,11 @@ const getProviderIcon = (provider: string) => {
       );
     case "Perplexity":
       return (
-        <img
+        <Image
           src="https://cdn.brandfetch.io/idNdawywEZ/w/800/h/800/theme/dark/icon.png?c=1dxbfHSJFAPEGdCLU4o5B"
           alt="Perplexity"
+          width={24}
+          height={24}
           className="w-6 h-6"
         />
       );
@@ -167,9 +173,10 @@ export function PromptsResponsesTab({
           </div>
 
           {/* Expand/Collapse All Button */}
-          <button
+          <Button
+            variant="outline"
             onClick={handleExpandAll}
-            className="h-9 px-4 py-2 rounded-[10px] text-sm font-medium flex items-center gap-2 transition-all duration-200 bg-orange-500 text-white hover:bg-orange-600 [box-shadow:inset_0px_-2.108433723449707px_0px_0px_#c2410c,_0px_1.2048193216323853px_6.325301647186279px_0px_rgba(234,_88,_12,_58%)] hover:translate-y-[1px] hover:scale-[0.98] hover:[box-shadow:inset_0px_-1px_0px_0px_#c2410c,_0px_1px_3px_0px_rgba(234,_88,_12,_40%)] active:translate-y-[2px] active:scale-[0.97] active:[box-shadow:inset_0px_1px_1px_0px_#c2410c,_0px_1px_2px_0px_rgba(234,_88,_12,_30%)]"
+            className="h-9 px-4 py-2 rounded-[10px] text-sm font-medium flex items-center gap-2 transition-all duration-200"
           >
             {allExpanded ? (
               <>
@@ -182,7 +189,7 @@ export function PromptsResponsesTab({
                 Expand All
               </>
             )}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -381,7 +388,7 @@ export function PromptsResponsesTab({
       {searchQuery && filteredPromptIndices.length === 0 && (
         <div className="text-center py-8 bg-gray-50 rounded-lg">
           <p className="text-gray-600 mb-2">
-            No results found for "{searchQuery}"
+            No results found for &quot;{searchQuery}&quot;
           </p>
           <p className="text-gray-500 text-sm">
             Try searching for different keywords

@@ -39,8 +39,6 @@ export function useSSEHandler({
     console.log("[SSE] Received event:", eventData.type, eventData.data);
 
     switch (eventData.type) {
-
-
       case "progress":
         const progressData = eventData.data as ProgressData;
         dispatch({
@@ -71,29 +69,23 @@ export function useSSEHandler({
         const existingPrompts = analyzingPromptsRef.current || [];
         const analysisPrompts = state.analysisProgress.prompts || [];
 
-        // If prompts are already set (from custom prompts), don't process prompt-generated events
-        // This prevents overwriting the initial prompts set in handleAnalyze
-        if (existingPrompts.length > 0) {
-          // Still update analysis progress prompts to keep them in sync
-          if (!analysisPrompts.includes(promptData.prompt)) {
-            dispatch({
-              type: "UPDATE_ANALYSIS_PROGRESS",
-              payload: {
-                prompts: [...analysisPrompts, promptData.prompt],
-              },
-            });
-          }
-          break;
-        }
+        console.log("[SSE] Processing prompt-generated:", {
+          prompt: promptData.prompt,
+          existingPrompts: existingPrompts.length,
+          analysisPrompts: analysisPrompts.length,
+        });
 
         // Only process if this is truly a new prompt being generated
         if (!existingPrompts.includes(promptData.prompt)) {
+          // Update analysis progress prompts
           dispatch({
             type: "UPDATE_ANALYSIS_PROGRESS",
             payload: {
               prompts: [...analysisPrompts, promptData.prompt],
             },
           });
+
+          // Add to existing prompts (don't replace them)
           dispatch({
             type: "SET_ANALYZING_PROMPTS",
             payload: [...existingPrompts, promptData.prompt],
@@ -103,7 +95,14 @@ export function useSSEHandler({
           const newStatus = { ...promptCompletionStatusRef.current };
           const normalizedPrompt = promptData.prompt.trim();
           newStatus[normalizedPrompt] = {};
-          state.availableProviders.forEach((provider) => {
+
+          // Use available providers from state or fallback to default providers
+          const providers =
+            state.availableProviders.length > 0
+              ? state.availableProviders
+              : ["OpenAI", "Anthropic", "Google", "Perplexity"];
+
+          providers.forEach((provider) => {
             newStatus[normalizedPrompt][provider] = "pending";
           });
           dispatch({
