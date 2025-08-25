@@ -1,3 +1,21 @@
+/**
+ * AI Analysis Utilities for Brand Monitor
+ *
+ * This module provides AI-powered brand visibility analysis using multiple providers.
+ *
+ * SCORING SYSTEM (Updated):
+ * - Visibility score = percentage of AI responses where company is mentioned
+ * - All companies treated equally - no bias toward analyzed company
+ * - Only counts mentions from AI rankings, no special handling
+ * - Simple, transparent calculation based on actual AI mentions
+ *
+ * Key improvements:
+ * 1. Equal treatment for all companies in visibility scoring
+ * 2. Removed special handling that gave analyzed company extra mentions
+ * 3. Transparent calculation that's easy to understand
+ * 4. Consistent results across different analysis runs
+ */
+
 import { generateText, generateObject } from "ai";
 import { z } from "zod";
 import {
@@ -541,33 +559,33 @@ export async function generatePromptsForCompany(
     categoryContext = "outdoor equipment brands";
   }
 
-  // Generate contextually relevant prompts
+  // Generate contextually relevant prompts - make them neutral to avoid bias
   const contextualTemplates = {
     ranking: [
-      `Compare ${competitors.join(", ")} and ${brandName} for ${productContext}`,
-      `Rank ${competitors.join(", ")} and ${brandName} by their ${productContext} capabilities`,
-      `Which is better for ${productContext}: ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")} vs ${brandName}?`,
-      `Top ${categoryContext} including ${competitors.join(", ")} and ${brandName}`,
+      `Compare ${competitors.join(", ")} for ${productContext}`,
+      `Rank ${competitors.join(", ")} by their ${productContext} capabilities`,
+      `Which is better for ${productContext}: ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")}?`,
+      `Top ${categoryContext} including ${competitors.join(", ")}`,
     ],
     comparison: [
-      `${brandName} vs ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")} for ${productContext}`,
-      `How does ${brandName} compare to ${competitors.join(", ")}?`,
+      `Compare ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")} for ${productContext}`,
+      `How do ${competitors.join(", ")} compare?`,
       competitors[0] && mainProducts[0]
-        ? `${competitors[0]} or ${brandName} which has better ${mainProducts[0]}`
-        : `${brandName} compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
+        ? `Which has better ${mainProducts[0]}: ${competitors.slice(0, Math.min(3, competitors.length)).join(" vs ")}`
+        : `Compare ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
     ],
     alternatives: [
-      `Alternatives to ${brandName}: ${competitors.join(", ")}`,
-      `${categoryContext} similar to ${brandName}: ${competitors.join(", ")}`,
-      `Competitors of ${brandName} in ${productContext.split(" ")[0]} market: ${competitors.join(", ")}`,
+      `Alternatives for ${productContext}: ${competitors.join(", ")}`,
+      `${categoryContext} similar to existing brands: ${competitors.join(", ")}`,
+      `Best ${productContext} brands in the market: ${competitors.join(", ")}`,
     ],
     recommendations: [
       mainProducts.length > 0
-        ? `Is ${brandName} ${mainProducts[0]} worth buying compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`
-        : `Is ${brandName} worth it for ${productContext} compared to ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`,
-      `${brandName} ${productContext} reviews vs ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
-      `Should I buy ${brandName} or ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")} for ${productContext}?`,
-      `Best ${productContext} among ${brandName} and ${competitors.join(", ")}`,
+        ? `Which ${mainProducts[0]} is worth buying: ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`
+        : `Which is worth it for ${productContext}: ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}?`,
+      `${productContext} reviews: ${competitors.slice(0, Math.min(3, competitors.length)).join(", ")}`,
+      `Should I buy ${competitors.slice(0, Math.min(3, competitors.length)).join(" or ")} for ${productContext}?`,
+      `Best ${productContext} among ${competitors.join(", ")}`,
     ],
   };
 
@@ -652,10 +670,11 @@ export async function analyzePromptWithProvider(
   const systemPrompt = `You are an AI assistant analyzing brand visibility and rankings.
 When responding to prompts about tools, platforms, or services:
 1. Provide rankings with specific positions (1st, 2nd, etc.)
-2. Focus on the companies mentioned in the prompt
+2. Only include companies that are actually relevant to the prompt
 3. Be objective and factual
 4. Explain briefly why each tool is ranked where it is
-5. If you don't have enough information about a specific company, you can mention that`;
+5. If you don't have enough information about a specific company, don't include it in rankings
+6. Don't feel obligated to include any specific company - only rank companies that are genuinely relevant`;
 
   try {
     // First, get the response
@@ -709,7 +728,7 @@ When responding to prompts about tools, platforms, or services:
             .describe("List of competitor names mentioned in the response"),
         }),
       }),
-      prompt: `Analyze this AI response about ${brandName} and competitors ${competitors.join(", ")}:
+      prompt: `Analyze this AI response for mentions of companies: ${[brandName, ...competitors].join(", ")}
 
 "${text}"
 
@@ -718,10 +737,10 @@ Return a structured analysis including:
 2. ${brandName}'s position/ranking if mentioned
 3. Overall sentiment about ${brandName}
 4. Confidence in the analysis
-5. Rankings of all companies mentioned
+5. Rankings of all companies mentioned (only include companies that are actually mentioned)
 6. List of competitors mentioned
 
-Be objective and factual.`,
+Be objective and factual. Only include companies that are actually mentioned in the response.`,
     });
 
     // Get the proper display name for the provider
@@ -758,26 +777,16 @@ Be objective and factual.`,
     // Ensure we have rankings data
     let rankings = object.analysis.rankings || [];
 
-    // If no rankings from structured output, try to generate basic ones from mentions
-    if (rankings.length === 0) {
-      const mentionedCompanies = [brandName, ...competitors].filter(
-        (company) => {
-          const detection = detectBrandMention(text, company, {
-            caseSensitive: false,
-            wholeWordOnly: true,
-            includeVariations: true,
-          });
-          return detection.mentioned;
-        }
-      );
+    // Only use rankings from AI structured output - no fallback to avoid bias
+    // If AI doesn't provide rankings, that's fine - company won't be counted as mentioned
 
-      rankings = mentionedCompanies.slice(0, 5).map((company, index) => ({
-        position: index + 1,
-        company,
-        reason: `${company} was mentioned in the analysis`,
-        sentiment: "neutral" as const,
-      }));
-    }
+    // DEBUG: Log what the AI actually returned
+    console.log(`=== DEBUG: AI Response for ${provider} ===`);
+    console.log("Original prompt:", prompt);
+    console.log("AI text response:", text.substring(0, 200) + "...");
+    console.log("Structured rankings:", rankings);
+    console.log("Brand mentioned:", brandMentioned);
+    console.log("=== END AI DEBUG ===");
 
     return {
       provider: providerDisplayName,
@@ -786,7 +795,7 @@ Be objective and factual.`,
       rankings,
       competitors: relevantCompetitors,
       brandMentioned,
-      brandPosition: object.analysis.brandPosition,
+      brandPosition: object.analysis.brandPosition || undefined,
       sentiment: object.analysis.overallSentiment,
       confidence: object.analysis.confidence,
       timestamp: new Date(),
@@ -883,23 +892,22 @@ export async function analyzeCompetitors(
       });
     }
 
-    // Count brand mentions (only if not already counted in rankings)
-    if (
-      response.brandMentioned &&
-      trackedCompanies.has(company.name) &&
-      !mentionedInResponse.has(company.name)
-    ) {
-      const brandData = competitorMap.get(company.name)!;
-      brandData.mentions++;
-      if (response.brandPosition) {
-        brandData.positions.push(response.brandPosition);
-      }
-      brandData.sentiments.push(response.sentiment);
-    }
+    // All companies are counted equally through rankings only
+    // No special handling for the analyzed company to ensure fairness
   });
 
-  // Calculate scores for each competitor
+  // DEBUG: Log the mention counts to understand what's happening
+  console.log("=== DEBUG: Mention Counts ===");
   const totalResponses = responses.length;
+  console.log("Total responses:", totalResponses);
+  competitorMap.forEach((data, name) => {
+    console.log(
+      `${name}: ${data.mentions} mentions out of ${totalResponses} responses`
+    );
+  });
+  console.log("=== END DEBUG ===");
+
+  // Calculate scores for each competitor
   const competitors: CompetitorRanking[] = [];
 
   competitorMap.forEach((data, name) => {
@@ -909,24 +917,10 @@ export async function analyzeCompetitors(
         : 99; // High number for companies not ranked
 
     const sentimentScore = calculateSentimentScore(data.sentiments);
-    let visibilityScore = (data.mentions / totalResponses) * 100;
 
-    // Apply discount factor for self-analysis to prevent false 100% scores
-    if (name === company.name) {
-      // For self-analysis, apply a discount factor based on how many other companies were mentioned
-      const otherMentions = Array.from(competitorMap.entries())
-        .filter(([otherName]) => otherName !== company.name)
-        .reduce((sum, [, otherData]) => sum + otherData.mentions, 0);
-      
-      // If other companies were mentioned, apply a discount
-      if (otherMentions > 0) {
-        const discountFactor = Math.min(0.8, otherMentions / totalResponses);
-        visibilityScore = visibilityScore * (1 - discountFactor);
-      } else {
-        // If no other companies mentioned, apply a significant discount
-        visibilityScore = visibilityScore * 0.6;
-      }
-    }
+    // Calculate visibility score as percentage of responses where company is mentioned
+    // All companies are treated equally - no bias adjustments
+    let visibilityScore = (data.mentions / totalResponses) * 100;
 
     competitors.push({
       name,
@@ -952,6 +946,126 @@ export async function analyzeCompetitors(
 
   // Sort by visibility score
   return competitors.sort((a, b) => b.visibilityScore - a.visibilityScore);
+}
+
+/**
+ * Calculate objective visibility score that removes bias toward the analyzed company
+ * Uses multiple factors to create a more balanced and meaningful score
+ */
+function calculateObjectiveVisibilityScore(
+  data: {
+    mentions: number;
+    positions: number[];
+    sentiments: ("positive" | "neutral" | "negative")[];
+  },
+  totalResponses: number,
+  companyName: string,
+  analyzedCompanyName: string
+): number {
+  // Base visibility from mentions
+  const baseVisibility = (data.mentions / totalResponses) * 100;
+
+  // Position quality bonus (better positions = higher score)
+  const positionBonus = calculatePositionBonus(data.positions);
+
+  // Sentiment quality bonus (positive sentiment = higher score)
+  const sentimentBonus = calculateSentimentBonus(data.sentiments);
+
+  // Remove bias: if this is the analyzed company, apply a small penalty
+  // to account for the fact that it's always mentioned in the analysis context
+  const biasAdjustment = companyName === analyzedCompanyName ? -15 : 0;
+
+  // Calculate final score with all factors
+  const finalScore = Math.max(
+    0,
+    Math.min(
+      100,
+      baseVisibility + positionBonus + sentimentBonus + biasAdjustment
+    )
+  );
+
+  return finalScore;
+}
+
+/**
+ * Calculate bonus points based on ranking positions
+ * Better positions (lower numbers) get higher bonuses
+ */
+function calculatePositionBonus(positions: number[]): number {
+  if (positions.length === 0) return 0;
+
+  const avgPosition = positions.reduce((a, b) => a + b, 0) / positions.length;
+
+  // Bonus scale: 1st place = +20, 2nd = +15, 3rd = +10, etc.
+  if (avgPosition <= 1) return 20;
+  if (avgPosition <= 2) return 15;
+  if (avgPosition <= 3) return 10;
+  if (avgPosition <= 5) return 5;
+  if (avgPosition <= 10) return 2;
+
+  return 0; // No bonus for positions beyond 10
+}
+
+/**
+ * Calculate bonus points based on sentiment quality
+ * Positive sentiment gets bonus, negative gets penalty
+ */
+function calculateSentimentBonus(
+  sentiments: ("positive" | "neutral" | "negative")[]
+): number {
+  if (sentiments.length === 0) return 0;
+
+  const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
+  sentiments.forEach((s) => sentimentCounts[s]++);
+
+  const total = sentiments.length;
+  const positiveRatio = sentimentCounts.positive / total;
+  const negativeRatio = sentimentCounts.negative / total;
+
+  // Bonus for positive sentiment, penalty for negative
+  const bonus = positiveRatio * 10 - negativeRatio * 5;
+
+  return Math.max(-10, Math.min(10, bonus)); // Cap between -10 and +10
+}
+
+/**
+ * Calculate market-relative visibility score that provides better competitive context
+ * This score considers the company's performance relative to competitors in the same analysis
+ */
+function calculateMarketRelativeScore(
+  competitors: CompetitorRanking[],
+  companyName: string
+): number {
+  if (competitors.length === 0) return 0;
+
+  const company = competitors.find((c) => c.name === companyName);
+  if (!company) return 0;
+
+  // Calculate market average visibility
+  const totalVisibility = competitors.reduce(
+    (sum, c) => sum + c.visibilityScore,
+    0
+  );
+  const marketAverage = totalVisibility / competitors.length;
+
+  // Calculate standard deviation for market context
+  const variance =
+    competitors.reduce((sum, c) => {
+      return sum + Math.pow(c.visibilityScore - marketAverage, 2);
+    }, 0) / competitors.length;
+  const standardDeviation = Math.sqrt(variance);
+
+  // Calculate z-score (how many standard deviations above/below market average)
+  const zScore =
+    standardDeviation > 0
+      ? (company.visibilityScore - marketAverage) / standardDeviation
+      : 0;
+
+  // Convert z-score to a 0-100 scale
+  // z-score of 0 = 50, +1 = 75, +2 = 90, -1 = 25, -2 = 10
+  const marketRelativeScore = Math.max(0, Math.min(100, 50 + zScore * 25));
+
+  return Math.round(marketRelativeScore * 10) / 10;
 }
 
 function calculateSentimentScore(
@@ -1136,25 +1250,9 @@ export async function analyzeCompetitorsByProvider(
           ? data.positions.reduce((a, b) => a + b, 0) / data.positions.length
           : 99;
 
-      let visibilityScore =
-        totalResponses > 0 ? (data.mentions / totalResponses) * 100 : 0;
-
-      // Apply discount factor for self-analysis to prevent false 100% scores
-      if (name === company.name) {
-        // For self-analysis, apply a discount factor based on how many other companies were mentioned
-        const otherMentions = Array.from(competitorMap.entries())
-          .filter(([otherName]) => otherName !== company.name)
-          .reduce((sum, [, otherData]) => sum + otherData.mentions, 0);
-        
-        // If other companies were mentioned, apply a discount
-        if (otherMentions > 0) {
-          const discountFactor = Math.min(0.8, otherMentions / totalResponses);
-          visibilityScore = visibilityScore * (1 - discountFactor);
-        } else {
-          // If no other companies mentioned, apply a significant discount
-          visibilityScore = visibilityScore * 0.6;
-        }
-      }
+      // Calculate visibility score as percentage of responses where company is mentioned
+      // All companies are treated equally - no bias adjustments
+      let visibilityScore = (data.mentions / totalResponses) * 100;
 
       competitors.push({
         name,

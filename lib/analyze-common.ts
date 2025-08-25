@@ -105,6 +105,13 @@ export async function performAnalysis({
     competitors = await identifyCompetitors(company, sendEvent);
   }
 
+  // Add the analyzed company to the competitors list so it can be detected in responses
+  // This ensures it's treated equally with other companies
+  if (!competitors.includes(company.name)) {
+    competitors.push(company.name);
+    console.log("Added analyzed company to competitors list:", company.name);
+  }
+
   // Stage 2: Generate prompts
   // Skip the 100% progress for competitors and go straight to the next stage
   await sendEvent({
